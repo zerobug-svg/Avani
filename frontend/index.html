@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Avani | Prasanna's AI Assistant
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="dashboard">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+
+        <!-- SIDEBAR TOP GLOW -->
+
+        <div class="sidebar-glow"></div>
+
+
+        <!-- =================================================
+             BRAND
+        ================================================== -->
+
+        <div
+            class="brand"
+            id="brandButton"
+            role="button"
+            tabindex="0"
+            title="About Prasanna"
+        >
+
+            <div class="brand-logo-wrap">
+
+                <div class="brand-logo">
+                    A
+                </div>
+
+            </div>
+
+
+            <div class="brand-text">
+
+                <h2>
+                    Prasanna AI Solutions
+                </h2>
+
+                <p>
+                    Ideas Today. Smarter Tomorrow.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             NAVIGATION
+        ================================================== -->
+
+        <nav class="side-nav">
+
+
+            <button
+                class="nav-item active"
+                data-page="chat"
+            >
+
+                <span class="nav-icon">
+                    💬
+                </span>
+
+                <span class="nav-label">
+                    Chat
+                </span>
+
+                <span class="nav-arrow">
+                    ›
+                </span>
+
+            </button>
+
+
+
+            <button
+                class="nav-item"
+                data-page="memory"
+            >
+
+                <span class="nav-icon">
+                    🧠
+                </span>
+
+                <span class="nav-label">
+                    Memory
+                </span>
+
+                <span class="nav-arrow">
+                    ›
+                </span>
+
+            </button>
+
+
+
+            <button
+                class="nav-item"
+                data-page="tasks"
+            >
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                <span class="nav-label">
+                    Tasks
+                </span>
+
+                <span class="nav-arrow">
+                    ›
+                </span>
+
+            </button>
+
+
+
+            <button
+                class="nav-item"
+                data-page="notes"
+            >
+
+                <span class="nav-icon">
+                    ▤
+                </span>
+
+                <span class="nav-label">
+                    Notes
+                </span>
+
+                <span class="nav-arrow">
+                    ›
+                </span>
+
+            </button>
+
+
+
+            <button
+                class="nav-item"
+                data-page="learning hub"
+            >
+
+                <span class="nav-icon">
+                    🎓
+                </span>
+
+                <span class="nav-label">
+                    Learning Hub
+                </span>
+
+                <span class="nav-arrow">
+                    ›
+                </span>
+
+            </button>
+
+
+
+            <button
+                class="nav-item"
+                data-page="tools"
+            >
+
+                <span class="nav-icon">
+                    🛠
+                </span>
+
+                <span class="nav-label">
+                    Tools
+                </span>
+
+                <span class="nav-arrow">
+                    ›
+                </span>
+
+            </button>
+
+
+
+            <button
+                class="nav-item"
+                data-page="settings"
+            >
+
+                <span class="nav-icon">
+                    ⚙
+                </span>
+
+                <span class="nav-label">
+                    Settings
+                </span>
+
+                <span class="nav-arrow">
+                    ›
+                </span>
+
+            </button>
+
+
+        </nav>
+
+
+
+        <!-- =================================================
+             SIDEBAR QUOTE
+        ================================================== -->
+
+        <div class="sidebar-quote">
+
+            <div class="quote-glow"></div>
+
+            <div class="quote-icon">
+                "
+            </div>
+
+            <p>
+                A better you
+                <br>
+                with the right AI.
+            </p>
+
+            <span class="quote-line"></span>
+
+            <small>
+                Powered by Avani
+            </small>
+
+        </div>
+
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <div class="sidebar-footer">
+
+            <span class="footer-dot"></span>
+
+            Avani AI System
+
+            <span class="footer-version">
+                v1.0
+            </span>
+
+        </div>
+
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="main">
+
+
+        <!-- =================================================
+             TOPBAR
+        ================================================== -->
+
+        <header class="topbar">
+
+
+            <div class="greeting">
+
+                <div class="sun">
+                    ☀️
+                </div>
+
+                <div>
+
+                    <h2>
+                        Good Morning, Prasanna
+                    </h2>
+
+                    <p>
+                        Let's make today productive!
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="top-quote">
+
+                "Discipline today creates
+                the future you want."
+
+            </div>
+
+
+
+            <!-- PROFILE -->
+
+            <div class="profile">
+
+                <span class="notification">
+                    ♧
+                </span>
+
+
+                <div
+                    class="profile-circle prasanna-profile"
+                    id="prasannaProfile"
+                    title="Open Prasanna profile"
+                >
+
+                    <img
+                        src="/static/assets/prasanna.png"
+                        alt="Prasanna"
+                    >
+
+                </div>
+
+
+                <span>
+                    Prasanna
+                </span>
+
+
+                <span>
+                    ⌄
+                </span>
+
+            </div>
+
+
+        </header>
+
+
+
+        <!-- =================================================
+             CONTENT
+        ================================================== -->
+
+        <div class="content-grid">
+
+
+            <!-- =================================================
+                 CENTER
+            ================================================== -->
+
+            <section class="center">
+
+
+                <!-- =================================================
+     AVANI HERO
+================================================== -->
+
+<div class="hero-card" id="avaniHero">
+
+    <!-- AVANI IMAGE -->
+
+    <img
+        src="/static/assets/avani-girl.png"
+        alt="Avani"
+        class="hero-image"
+    >
+
+
+    <!-- DARK OVERLAY -->
+
+    <div class="hero-overlay"></div>
+
+
+    <!-- =================================================
+         AVANI FOCUS BUTTON
+    ================================================== -->
+
+    <button
+    id="avaniFocusButton"
+    class="avani-focus-button"
+    type="button"
+    title="Avani Focus Mode"
+    aria-label="Toggle Avani Focus Mode"
+    onclick="toggleAvaniFocusMode(event)"
+>
+    ✦
+</button>
+
+
+    <!-- =================================================
+         HERO CONTENT
+    ================================================== -->
+
+    <div class="hero-content">
+
+        <div class="hero-status">
+
+            <span></span>
+
+            AVANI ONLINE
+
+        </div>
+
+
+        <h1>
+
+            Hi, I'm
+
+            <span>
+                Avani
+            </span>
+
+        </h1>
+
+
+        <h3>
+            Prasanna's AI Assistant
+        </h3>
+
+
+        <p>
+            Ask. Learn. Plan. Build. Grow.
+        </p>
+
+
+        <div class="quick-actions">
+
+
+            <button>
+                💬 Chat
+            </button>
+
+
+            <button>
+                🧠 Remember
+            </button>
+
+
+            <button>
+                📅 Plan
+            </button>
+
+
+            <button>
+                🎓 Learn
+            </button>
+
+
+            <button>
+                ✨ Assist
+            </button>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+                <!-- =================================================
+                     CHAT
+                ================================================== -->
+
+                <div class="chat-card">
+
+
+                    <div
+                        class="messages"
+                        id="chatMessages"
+                    >
+
+
+                        <div class="chat-row">
+
+
+                            <div class="small-avatar">
+
+                                <img
+                                    src="/static/assets/avani-girl.png"
+                                    alt="Avani"
+                                >
+
+                            </div>
+
+
+                            <div class="bubble assistant">
+
+                                <p>
+                                    Hello Prasanna! 👋
+                                </p>
+
+                                <p>
+                                    I'm Avani, your personal AI assistant.
+                                </p>
+
+                                <p>
+                                    I'm here whenever you need me.
+                                </p>
+
+                            </div>
+
+
+                            <span class="time">
+                                Now
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <!-- INPUT -->
+
+                    <div class="input-area">
+
+<div class="input-box">
+
+    <!-- ATTACHMENT BUTTON -->
+    <button
+    id="attachButton"
+    type="button"
+    title="Attach file"
+    aria-label="Attach file"
+    onclick="document.getElementById('avaniFileInput').click()"
+        style="
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            min-height: 38px !important;
+
+            padding: 0 !important;
+            margin: 0 !important;
+
+            border: none !important;
+            outline: none !important;
+            border-radius: 8px !important;
+
+            background: transparent !important;
+            background-color: transparent !important;
+
+            box-shadow: none !important;
+
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+
+            color: #9eb1d3 !important;
+
+            font-size: 0 !important;
+            line-height: 0 !important;
+
+            cursor: pointer !important;
+            box-sizing: border-box !important;
+            flex-shrink: 0 !important;
+        "
+    >
+        <svg
+            class="attach-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            style="
+                width: 20px !important;
+                height: 20px !important;
+                min-width: 20px !important;
+                min-height: 20px !important;
+
+                display: block !important;
+
+                margin: 0 !important;
+                padding: 0 !important;
+
+                background: transparent !important;
+                border: none !important;
+
+                fill: none !important;
+                stroke: #9eb1d3 !important;
+
+                color: #9eb1d3 !important;
+
+                pointer-events: none !important;
+            "
+        >
+            <path
+                d="M21.44 11.05L12.25 20.24C10.17 22.32 6.79 22.32 4.71 20.24C2.63 18.16 2.63 14.78 4.71 12.7L14.24 3.17C15.8 1.61 18.33 1.61 19.89 3.17C21.45 4.73 21.45 7.26 19.89 8.82L10.35 18.36C9.57 19.14 8.31 19.14 7.53 18.36C6.75 17.58 6.75 16.32 7.53 15.54L16.36 6.71"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            ></path>
+        </svg>
+    </button>
+<input
+    type="file"
+    id="avaniFileInput"
+    accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls,.png,.jpg,.jpeg"
+    style="display: none;"
+    onchange="avaniFileSelected(this)"
+>
+
+    <!-- MESSAGE INPUT -->
+    <!-- FILE PREVIEW -->
+<div
+    id="avaniFilePreview"
+    style="
+        display: none;
+        align-items: center;
+        gap: 8px;
+        margin-right: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        max-width: 220px;
+        color: #9eb1d3;
+        font-size: 13px;
+        border: 1px solid rgba(111, 140, 255, 0.55);
+        border-radius: 8px;
+        padding: 5px 8px;
+        background: rgba(15, 28, 48, 0.7);
+        box-sizing: border-box;
+    "
+>
+    <span>📄</span>
+
+    <span
+        id="avaniFileName"
+        style="
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        "
+    ></span>
+
+    <button
+        id="avaniFileRemove"
+        type="button"
+        title="Remove attached file"
+        aria-label="Remove attached file"
+        onclick="clearAvaniAttachedFile()"
+        style="
+            border: 1px solid rgba(111, 140, 255, 0.45);
+            background: rgba(20, 35, 60, 0.8);
+            color: #9eb1d3;
+            font-size: 14px;
+            line-height: 1;
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        "
+    >
+        ×
+    </button>
+</div>
+    <input
+        id="messageInput"
+        type="text"
+        placeholder="Type your message here..."
+        autocomplete="off"
+    >
+
+
+    <!-- VOICE BUTTON -->
+    <button
+        id="voiceButton"
+        type="button"
+        title="Voice"
+        aria-label="Voice input"
+        style="
+            appearance: none !important;
+            -webkit-appearance: none !important;
+
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            min-height: 38px !important;
+
+            padding: 0 !important;
+            margin: 0 !important;
+
+            border: 1px solid rgba(76, 130, 224, .40) !important;
+            border-radius: 10px !important;
+
+            background: #0b192c !important;
+            color: #9eb1d3 !important;
+
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+
+            box-sizing: border-box !important;
+            cursor: pointer !important;
+
+            font-size: 0 !important;
+            line-height: 0 !important;
+
+            outline: none !important;
+        "
+    >
+        <svg
+            class="mic-icon"
+            width="21"
+            height="21"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            style="
+                width: 21px !important;
+                height: 21px !important;
+
+                display: block !important;
+                flex-shrink: 0 !important;
+
+                margin: 0 !important;
+                padding: 0 !important;
+
+                background: transparent !important;
+
+                color: #9eb1d3 !important;
+
+                pointer-events: none !important;
+            "
+        >
+            <rect
+                x="9"
+                y="3"
+                width="6"
+                height="11"
+                rx="3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+            ></rect>
+
+            <path
+                d="M6.5 11.5C6.5 14.54 8.96 17 12 17C15.04 17 17.5 14.54 17.5 11.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+            ></path>
+
+            <path
+                d="M12 17V21"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+            ></path>
+
+            <path
+                d="M9 21H15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+            ></path>
+        </svg>
+</button>
+</div>
+
+
+                        <div class="send-button-group">
+
+    <button
+        id="sendButton"
+        class="send-button"
+    >
+        ➤
+    </button>
+
+    <button
+        id="clearChatButton"
+        class="clear-chat-btn"
+        title="Delete Chat"
+        aria-label="Delete Chat"
+        onclick="deleteChatHistory()"
+    >
+        🗑️
+    </button>
+
+
+</div>
+                        
+                        
+                    </div>
+
+
+
+                    <!-- SUGGESTIONS -->
+
+                    <div class="suggestions">
+
+
+                        <button>
+                            💡 Explain a concept
+                        </button>
+
+
+                        <button>
+                            📅 Help me plan
+                        </button>
+
+
+                        <button>
+                            🧠 What do you remember?
+                        </button>
+
+
+                        <button>
+                            💻 Give me project ideas
+                        </button>
+
+
+                        <button>
+                            ❤️ Motivate me
+                        </button>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- =================================================
+                 RIGHT PANEL
+            ================================================== -->
+
+            <aside class="right-panel">
+
+
+                <!-- SYSTEM STATUS -->
+
+                <div class="right-card">
+
+                    <div class="card-title">
+
+                        <h3>
+                            System Status
+                        </h3>
+
+                        <span class="online-status">
+                            ● Online
+                        </span>
+
+                    </div>
+
+
+                    <div class="status-row">
+
+                        <span>
+                            🤖
+                        </span>
+
+                        <span>
+                            Ollama (Llama 3.2)
+                        </span>
+
+                        <strong>
+                            Connected
+                        </strong>
+
+                    </div>
+
+
+                    <div class="status-row">
+
+                        <span>
+                            ⚙
+                        </span>
+
+                        <span>
+                            Backend (FastAPI)
+                        </span>
+
+                        <strong>
+                            Running
+                        </strong>
+
+                    </div>
+
+
+                    <div class="status-row">
+
+                        <span>
+                            🧠
+                        </span>
+
+                        <span>
+                            Memory
+                        </span>
+
+                        <strong>
+                            Active
+                        </strong>
+
+                    </div>
+
+
+                    <div class="status-row">
+
+                        <span>
+                            ◇
+                        </span>
+
+                        <span>
+                            All Systems
+                        </span>
+
+                        <strong>
+                            Operational
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- TODAY -->
+
+                <div class="right-card">
+
+                    <div class="card-title">
+
+                        <h3>
+                            Today
+                        </h3>
+
+                        <span class="date">
+                            9 Sep 2026
+                        </span>
+
+                    </div>
+
+
+                    <label class="task">
+
+                        <input type="checkbox">
+
+                        Learn Python
+
+                    </label>
+
+
+                    <label class="task">
+
+                        <input type="checkbox">
+
+                        Work on Avani project
+
+                    </label>
+
+
+                    <label class="task">
+
+                        <input type="checkbox">
+
+                        Explore new AI tools
+
+                    </label>
+
+
+                    <label class="task">
+
+                        <input type="checkbox">
+
+                        Stay consistent
+
+                    </label>
+
+
+                    <button class="add-task">
+
+                        ＋ Add Task
+
+                    </button>
+
+                </div>
+
+
+
+                <!-- QUICK TOOLS -->
+
+                <div class="right-card">
+
+                    <div class="card-title">
+
+                        <h3>
+                            Quick Tools
+                        </h3>
+
+                    </div>
+
+
+                    <div class="tools-grid">
+
+
+                        <button>
+
+                            <span>
+                                ▤
+                            </span>
+
+                            New Note
+
+                        </button>
+
+
+                        <button>
+
+                            <span>
+                                □
+                            </span>
+
+                            Set Reminder
+
+                        </button>
+
+
+                        <button>
+
+                            <span>
+                                &lt;/&gt;
+                            </span>
+
+                            Code Help
+
+                        </button>
+
+
+                        <button>
+
+                            <span>
+                                🎓
+                            </span>
+
+                            Study Plan
+
+                        </button>
+
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- QUOTE -->
+
+                <div class="right-quote">
+
+                    <p>
+
+                        "Small steps every day
+                        <br>
+                        lead to big results."
+
+                    </p>
+
+                    <span>
+                        ↗
+                    </span>
+
+                </div>
+
+
+            </aside>
+
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+<script src="/static/script.js"></script>
+
+</body>
+
+</html>

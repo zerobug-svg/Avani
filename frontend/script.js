@@ -671,9 +671,9 @@ async function sendMessage() {
             notes.some(
                 note =>
                     note.title.toLowerCase() ===
-                        title.toLowerCase() &&
+                    title.toLowerCase() &&
                     note.content.toLowerCase() ===
-                        content.toLowerCase()
+                    content.toLowerCase()
             );
 
 
@@ -996,195 +996,427 @@ async function sendMessage() {
     }
 
 
-   /* =====================================================
-   WEB SEARCH
-===================================================== */
+    /* =====================================================
+    WEB SEARCH
+ ===================================================== */
 
-const webSearchPatterns = [
-    /^search the web for\s+(.+)/i,
-    /^search web for\s+(.+)/i,
-    /^web search\s+(.+)/i,
-    /^search online for\s+(.+)/i,
-    /^look up\s+(.+)/i,
-    /^find online\s+(.+)/i
-];
+    const webSearchPatterns = [
+        /^search the web for\s+(.+)/i,
+        /^search web for\s+(.+)/i,
+        /^web search\s+(.+)/i,
+        /^search online for\s+(.+)/i,
+        /^look up\s+(.+)/i,
+        /^find online\s+(.+)/i
+    ];
 
-let webSearchQuery = null;
+    let webSearchQuery = null;
 
-for (const pattern of webSearchPatterns) {
+    for (const pattern of webSearchPatterns) {
 
-    const match =
-        finalMessage.match(pattern);
+        const match =
+            finalMessage.match(pattern);
 
-    if (match) {
+        if (match) {
 
-        webSearchQuery =
-            match[1].trim();
+            webSearchQuery =
+                match[1].trim();
 
-        break;
+            break;
+        }
     }
-}
 
 
-if (webSearchQuery) {
+    if (webSearchQuery) {
 
-    addUserMessage(message);
+        addUserMessage(message);
 
-    messageInput.value = "";
+        messageInput.value = "";
 
-    sendButton.disabled = true;
+        sendButton.disabled = true;
 
-    showThinking();
+        showThinking();
 
-    try {
+        try {
 
-        const response =
-            await fetch(
-                "/web-search",
-                {
-                    method: "POST",
+            const response =
+                await fetch(
+                    "/web-search",
+                    {
+                        method: "POST",
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
 
-                    body: JSON.stringify({
-                        message:
-                            webSearchQuery
-                    })
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        removeThinking();
-
-
-        if (data.success) {
-
-            addAssistantMessage(
-                data.response
-            );
-
-
-            if (
-                data.sources &&
-                data.sources.length
-            ) {
-
-                let sourcesText =
-                    "\n\nSources:\n";
-
-
-                data.sources.forEach(
-                    (source, index) => {
-
-                        sourcesText +=
-                            `${index + 1}. ` +
-                            `${source.title}\n` +
-                            `${source.url}\n\n`;
-
+                        body: JSON.stringify({
+                            message:
+                                webSearchQuery
+                        })
                     }
                 );
 
 
+            const data =
+                await response.json();
+
+
+            removeThinking();
+
+
+            if (data.success) {
+
                 addAssistantMessage(
-                    sourcesText
+                    data.response
+                );
+
+
+                if (
+                    data.sources &&
+                    data.sources.length
+                ) {
+
+                    let sourcesText =
+                        "\n\nSources:\n";
+
+
+                    data.sources.forEach(
+                        (source, index) => {
+
+                            sourcesText +=
+                                `${index + 1}. ` +
+                                `${source.title}\n` +
+                                `${source.url}\n\n`;
+
+                        }
+                    );
+
+
+                    addAssistantMessage(
+                        sourcesText
+                    );
+                }
+
+            } else {
+
+                addAssistantMessage(
+                    data.response ||
+                    "Web search could not be completed."
                 );
             }
 
-        } else {
+
+        } catch (error) {
+
+            console.error(
+                "WEB SEARCH ERROR:",
+                error
+            );
+
+
+            removeThinking();
+
 
             addAssistantMessage(
-                data.response ||
-                "Web search could not be completed."
+                "I couldn't connect to the web search service."
             );
+
+        } finally {
+
+            sendButton.disabled =
+                false;
+
+            messageInput.focus();
         }
 
 
-    } catch (error) {
-
-        console.error(
-            "WEB SEARCH ERROR:",
-            error
-        );
-
-
-        removeThinking();
-
-
-        addAssistantMessage(
-            "I couldn't connect to the web search service."
-        );
-
-    } finally {
-
-        sendButton.disabled =
-            false;
-
-        messageInput.focus();
+        return;
     }
-
-
-    return;
-}
-/* =====================================================
+   /* =====================================================
    AGENT ACTIONS
 ===================================================== */
 
-const agentPatterns = [
-    new RegExp("^open .+$", "i"),
-    new RegExp("^go to .+$", "i"),
-    new RegExp("^calculate .+$", "i"),
-    new RegExp("^what is .+$", "i"),
+const exactAgentPatterns = [
+    /^open .+/i,
+    /^go to .+/i,
+    /^calculate .+/i,
+    /^what is .+/i,
 
-    new RegExp("^increase volume$", "i"),
-    new RegExp("^turn up volume$", "i"),
-    new RegExp("^volume up$", "i"),
-    new RegExp("^make volume louder$", "i"),
-    new RegExp("^make it louder$", "i"),
-    new RegExp("^louder$", "i"),
+    /^increase volume$/i,
+    /^turn up volume$/i,
+    /^volume up$/i,
+    /^make volume louder$/i,
+    /^make it louder$/i,
+    /^louder$/i,
 
-    new RegExp("^decrease volume$", "i"),
-    new RegExp("^turn down volume$", "i"),
-    new RegExp("^volume down$", "i"),
-    new RegExp("^lower the volume$", "i"),
-    new RegExp("^make volume quieter$", "i"),
-    new RegExp("^make it quieter$", "i"),
-    new RegExp("^quieter$", "i"),
+    /^decrease volume$/i,
+    /^turn down volume$/i,
+    /^volume down$/i,
+    /^lower the volume$/i,
+    /^make volume quieter$/i,
+    /^make it quieter$/i,
+    /^quieter$/i,
 
-    new RegExp("^mute$", "i"),
-    new RegExp("^mute volume$", "i"),
-    new RegExp("^mute my laptop$", "i"),
+    /^mute$/i,
+    /^mute volume$/i,
+    /^mute my laptop$/i,
 
-    new RegExp("^unmute$", "i"),
-    new RegExp("^unmute volume$", "i"),
-    new RegExp("^unmute my laptop$", "i"),
+    /^unmute$/i,
+    /^unmute volume$/i,
+    /^unmute my laptop$/i,
 
-    new RegExp("^(set )?volume(?: to)? [0-9]{1,3}%?$", "i"),
-    new RegExp("^make volume [0-9]{1,3}%?$", "i"),
+    /^(set )?volume(?: to)? [0-9]{1,3}%?$/i,
+    /^make volume [0-9]{1,3}%?$/i,
 
-    new RegExp("^increase brightness$", "i"),
-    new RegExp("^brightness up$", "i"),
-    new RegExp("^make screen brighter$", "i"),
+    /^increase brightness$/i,
+    /^brightness up$/i,
+    /^make screen brighter$/i,
+    /^decrease brightness$/i,
+    /^brightness down$/i,
+    /^make screen darker$/i,
 
-    new RegExp("^decrease brightness$", "i"),
-    new RegExp("^brightness down$", "i"),
-    new RegExp("^make screen darker$", "i"),
+    /^(set )?brightness(?: to)? [0-9]{1,3}%?$/i,
+    /^make brightness [0-9]{1,3}%?$/i,
+    /^brightness [0-9]{1,3}%?$/i,
+    /^lets do brightness [0-9]{1,3}%?$/i,
+    /^let's do brightness [0-9]{1,3}%?$/i,
 
-    new RegExp("^(set )?brightness(?: to)? [0-9]{1,3}%?$", "i"),
-    new RegExp("^make brightness [0-9]{1,3}%?$", "i")
+    /^turn wifi on$/i,
+    /^turn wi-fi on$/i,
+    /^wifi on$/i,
+    /^wi-fi on$/i,
+    /^enable wifi$/i,
+    /^enable wi-fi$/i,
+
+    /^turn wifi off$/i,
+    /^turn wi-fi off$/i,
+    /^wifi off$/i,
+    /^wi-fi off$/i,
+    /^disable wifi$/i,
+    /^disable wi-fi$/i,
+
+    /^play$/i,
+    /^play music$/i,
+    /^resume$/i,
+    /^resume music$/i,
+
+    /^pause$/i,
+    /^pause music$/i,
+
+    /^next$/i,
+    /^next song$/i,
+    /^next track$/i,
+
+    /^previous$/i,
+    /^previous song$/i,
+    /^previous track$/i,
+    /^back$/i,
+
+    /^screenshot$/i,
+    /^take screenshot$/i,
+    /^capture screen$/i,
+    /^take a screenshot$/i,
+    /^capture my screen$/i,
+
+    /^lock$/i,
+    /^lock my laptop$/i,
+    /^lock my computer$/i,
+    /^lock computer$/i,
+    /^lock screen$/i,
+    /^lock the screen$/i,
+
+    /^restart$/i,
+    /^restart computer$/i,
+    /^restart laptop$/i,
+    /^restart my computer$/i,
+    /^restart my laptop$/i,
+
+    /^shutdown$/i,
+    /^shutdown computer$/i,
+    /^shutdown laptop$/i,
+    /^shutdown my computer$/i,
+    /^shutdown my laptop$/i,
+
+    /^confirm restart$/i,
+    /^confirm shutdown$/i,
+
+    /^open camera$/i,
+    /^open the camera$/i,
+    /^launch camera$/i,
+    /^start camera$/i
 ];
-const isAgentCommand =
-    agentPatterns.some(pattern =>
+
+const isExactAgentCommand =
+    exactAgentPatterns.some(pattern =>
         pattern.test(finalMessage.trim())
     );
 
-if (isAgentCommand) {
+
+/*
+   Natural-language agent detection.
+
+   We send messages to the agent first so Avani
+   can understand normal human sentences.
+
+   If the agent decides the message is NOT an
+   action, we continue into normal AI chat below.
+*/
+
+const shouldTryAgent = true;
+
+
+if (shouldTryAgent) {
+
+    if (isExactAgentCommand || finalMessage.trim().length > 2) {
+
+        addUserMessage(message);
+
+        messageInput.value = "";
+
+        sendButton.disabled = true;
+
+        showThinking();
+
+        try {
+
+            const response =
+                await fetch(
+                    "/agent",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            command: finalMessage
+                        })
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Agent backend connection failed"
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            /*
+               If Avani understood this as an action,
+               execute the action.
+            */
+
+            if (
+    data.success &&
+    data.action &&
+    data.action !== "not_an_action"
+) {
+
+                removeThinking();
+
+
+                if (
+                    data.success &&
+                    data.action === "open_website" &&
+                    data.url
+                ) {
+
+                    addAssistantMessage(
+                        data.response
+                    );
+
+                    window.open(
+                        data.url,
+                        "_blank"
+                    );
+
+                }
+
+                else {
+
+                    addAssistantMessage(
+                        data.response ||
+                        "Agent action completed."
+                    );
+
+                }
+
+
+                sendButton.disabled = false;
+
+                messageInput.focus();
+
+                return;
+            }
+
+
+            /*
+               Not an action.
+
+               Remove the temporary agent message
+               and continue with normal AI chat.
+            */
+
+            removeThinking();
+
+            const userMessages =
+                document.querySelectorAll(
+                    ".user-message"
+                );
+
+            const lastUserMessage =
+                userMessages[
+                    userMessages.length - 1
+                ];
+
+            if (lastUserMessage) {
+                lastUserMessage.remove();
+            }
+
+        }
+
+        catch (error) {
+
+            removeThinking();
+
+            console.error(
+                "AGENT UNDERSTANDING ERROR:",
+                error
+            );
+
+            const userMessages =
+                document.querySelectorAll(
+                    ".user-message"
+                );
+
+            const lastUserMessage =
+                userMessages[
+                    userMessages.length - 1
+                ];
+
+            if (lastUserMessage) {
+                lastUserMessage.remove();
+            }
+        }
+
+        sendButton.disabled = false;
+
+        messageInput.focus();
+    }
+}
+
+    /* =====================================================
+       NORMAL AI CHAT
+    ===================================================== */
 
     addUserMessage(message);
 
@@ -1193,104 +1425,6 @@ if (isAgentCommand) {
     sendButton.disabled = true;
 
     showThinking();
-
-    try {
-
-        const response =
-            await fetch(
-                "/agent",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        command: finalMessage
-                    })
-                }
-            );
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Agent backend connection failed"
-            );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        removeThinking();
-
-
-        if (
-            data.success &&
-            data.action === "open_website" &&
-            data.url
-        ) {
-
-            addAssistantMessage(
-                data.response
-            );
-
-            window.open(
-                data.url,
-                "_blank"
-            );
-
-        }
-
-        else {
-
-            addAssistantMessage(
-                data.response ||
-                "Agent action completed."
-            );
-
-        }
-
-
-    } catch (error) {
-
-        removeThinking();
-
-        addAssistantMessage(
-            "I couldn't complete that agent action right now."
-        );
-
-        console.error(
-            "AGENT ERROR:",
-            error
-        );
-
-    }
-
-
-    sendButton.disabled = false;
-
-    messageInput.focus();
-
-    return;
-}
-
-/* =====================================================
-   NORMAL AI CHAT
-===================================================== */
-
-addUserMessage(message);
-
-messageInput.value = "";
-
-sendButton.disabled = true;
-
-showThinking();
 
 
     /* =====================================================
@@ -1404,93 +1538,93 @@ showThinking();
 
     try {
 
-    let response;
+        let response;
 
-    /*
-       =====================================================
-       FILE INTELLIGENCE
-       =====================================================
-    */
+        /*
+           =====================================================
+           FILE INTELLIGENCE
+           =====================================================
+        */
 
-    if (
-        hasAttachedFile &&
-        avaniSelectedFile &&
-        avaniSelectedFile.filePath
-    ) {
+        if (
+            hasAttachedFile &&
+            avaniSelectedFile &&
+            avaniSelectedFile.filePath
+        ) {
 
-        const fileChatMessage =
-            memoryContext +
-            taskContext +
-            noteContext +
-            "\nUSER MESSAGE:\n" +
-            finalMessage;
+            const fileChatMessage =
+                memoryContext +
+                taskContext +
+                noteContext +
+                "\nUSER MESSAGE:\n" +
+                finalMessage;
 
-        response =
-            await fetch(
-                "/chat-with-file",
-                {
-                    method: "POST",
+            response =
+                await fetch(
+                    "/chat-with-file",
+                    {
+                        method: "POST",
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
 
-                    body: JSON.stringify({
+                        body: JSON.stringify({
 
-                        message:
-                            fileChatMessage,
+                            message:
+                                fileChatMessage,
 
-                        file_path:
-                            avaniSelectedFile.filePath
+                            file_path:
+                                avaniSelectedFile.filePath
 
-                    })
-                }
+                        })
+                    }
+                );
+
+        }
+
+        /*
+           =====================================================
+           NORMAL CHAT
+           =====================================================
+        */
+
+        else {
+
+            response =
+                await fetch(
+                    `/chat?message=${encodeURIComponent(messageForAvani)}`
+                );
+        }
+
+
+        /*
+           =====================================================
+           CHECK RESPONSE
+           =====================================================
+        */
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Backend connection failed"
             );
-
-    }
-
-    /*
-       =====================================================
-       NORMAL CHAT
-       =====================================================
-    */
-
-    else {
-
-        response =
-            await fetch(
-                `/chat?message=${encodeURIComponent(messageForAvani)}`
-            );
-    }
+        }
 
 
-    /*
-       =====================================================
-       CHECK RESPONSE
-       =====================================================
-    */
+        const data =
+            await response.json();
 
-    if (!response.ok) {
 
-        throw new Error(
-            "Backend connection failed"
+        removeThinking();
+
+
+        addAssistantMessage(
+            data.response
         );
+        clearAvaniAttachedFile();
     }
-
-
-    const data =
-        await response.json();
-
-
-    removeThinking();
-
-
-    addAssistantMessage(
-        data.response
-    );
-clearAvaniAttachedFile();
-}
     catch (error) {
 
         removeThinking();
@@ -1870,13 +2004,13 @@ document
 
 function handleSidebarPage(page) {
 
-   if (page === "chat") {
+    if (page === "chat") {
 
-    openChatHistoryPanel();
+        openChatHistoryPanel();
 
-    return;
+        return;
 
-}
+    }
 
     if (page === "memory") {
 
@@ -2885,8 +3019,7 @@ function clearHistoryFromPanel() {
    MEMORY PANEL
 ========================================================= */
 
-function openMemoryPanel()
- {
+function openMemoryPanel() {
 
     let content = `
 
@@ -4377,7 +4510,7 @@ const originalAddAssistantMessage =
 
 
 addAssistantMessage =
-    function(
+    function (
         text,
         saveToHistory = true
     ) {

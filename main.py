@@ -1335,7 +1335,228 @@ async def agent_action(request: AgentRequest):
             "success": False,
             "response": "Please tell me what you want me to do."
         }
+    # --------------------------------------------------------
+    # NATURAL LANGUAGE AGENT UNDERSTANDING
+    # --------------------------------------------------------
 
+    import json
+    import re
+        # --------------------------------------------------------
+    # AVANI SHORT-TERM AGENT CONTEXT
+    # --------------------------------------------------------
+
+    global last_agent_command
+
+    if "last_agent_command" not in globals():
+        last_agent_command = ""
+
+    natural_command_prompt = f"""
+You are Avani's action understanding system.
+
+Convert the user's natural-language request into ONE
+canonical command that the existing Avani Windows agent
+can understand.
+
+PREVIOUS AGENT ACTION:
+{last_agent_command if last_agent_command else "None"}
+
+CURRENT USER REQUEST:
+{request.command}
+
+Return ONLY valid JSON.
+Do not add markdown.
+Do not explain anything.
+
+Use this format:
+
+{{
+    "is_action": true,
+    "command": "canonical command"
+}}
+
+If the request is NOT a computer action and is simply
+a normal question or conversation, return:
+
+{{
+    "is_action": false,
+    "command": ""
+}}
+
+Available canonical commands include:
+
+OPEN WEBSITE:
+- open google
+- open youtube
+- open github
+- open linkedin
+- open instagram
+- open facebook
+- open amazon
+- open netflix
+- open stackoverflow
+- open reddit
+
+WINDOWS APPS:
+- open calculator
+- open notepad
+- open paint
+- open command prompt
+- open powershell
+- open file explorer
+
+WINDOWS FOLDERS:
+- open desktop
+- open downloads
+- open documents
+- open pictures
+- open videos
+- open music
+
+SYSTEM:
+- open task manager
+- open settings
+- open control panel
+- open bluetooth settings
+- open wifi settings
+- open network settings
+
+VOLUME:
+- increase volume
+- decrease volume
+- mute
+- unmute
+- set volume to X%
+
+BRIGHTNESS:
+- increase brightness
+- decrease brightness
+- set brightness to X%
+
+WI-FI:
+- turn wifi on
+- turn wifi off
+
+MEDIA:
+- play
+- pause
+- next song
+- previous song
+
+SCREEN:
+- take screenshot
+
+LOCK:
+- lock screen
+
+POWER:
+- restart computer
+- shutdown computer
+- confirm restart
+- confirm shutdown
+
+CAMERA:
+- open camera
+
+CALCULATOR:
+- calculate X
+
+Examples:
+
+User:
+"My screen is too dark, can you brighten it?"
+
+Return:
+{{"is_action":true,"command":"increase brightness"}}
+
+User:
+"Could you make my screen 70 percent?"
+
+Return:
+{{"is_action":true,"command":"set brightness to 70%"}}
+
+User:
+"Please turn the sound down a little."
+
+Return:
+{{"is_action":true,"command":"decrease volume"}}
+
+User:
+"I'm trying to listen to music, start playing it."
+
+Return:
+{{"is_action":true,"command":"play"}}
+
+User:
+"Can you open YouTube for me?"
+
+Return:
+{{"is_action":true,"command":"open youtube"}}
+
+User:
+"Please lock my laptop."
+
+Return:
+{{"is_action":true,"command":"lock"}}
+
+User:
+"What is machine learning?"
+
+Return:
+{{"is_action":false,"command":""}}
+
+Only return JSON.
+"""
+
+    try:
+
+        natural_result = generate_ai_response(
+            prompt=natural_command_prompt,
+            model=OLLAMA_MODEL,
+            timeout=60
+        )
+
+        natural_result = (
+            natural_result
+            .replace("```json", "")
+            .replace("```", "")
+            .strip()
+        )
+
+        parsed_command = json.loads(
+            natural_result
+        )
+        if not parsed_command.get("is_action"):
+
+            return {
+                "success": True,
+                "is_action": False,
+                "action": "not_an_action",
+                "response": ""
+            }
+
+
+        detected_command = (
+            parsed_command.get(
+                "command",
+                ""
+            )
+            .strip()
+            .lower()
+        )
+
+
+        if detected_command:
+
+            command = detected_command
+
+            last_agent_command = detected_command
+
+    except Exception as error:
+
+        print(
+            "NATURAL AGENT UNDERSTANDING ERROR:",
+            error
+        )
 
         # --------------------------------------------------------
     # OPEN WEBSITE
@@ -1940,6 +2161,415 @@ async def agent_action(request: AgentRequest):
             except Exception:
                 pass
 
+    # --------------------------------------------------------
+    # SCREEN BRIGHTNESS
+    # --------------------------------------------------------
+
+    if "brightness" in command:
+
+     import re
+     import screen_brightness_control as sbc
+
+    brightness_match = re.search(
+        r"brightness.*?([0-9]{1,3})\s*%?",
+        command
+    )
+
+    if brightness_match:
+
+        brightness_value = int(
+            brightness_match.group(1)
+        )
+
+        if 0 <= brightness_value <= 100:
+
+            try:
+
+                sbc.set_brightness(
+                    brightness_value
+                )
+
+                return {
+                    "success": True,
+                    "action": "set_brightness",
+                    "brightness": brightness_value,
+                    "response":
+                        f"Brightness set to {brightness_value}%."
+                }
+
+            except Exception as error:
+
+                return {
+                    "success": False,
+                    "response":
+                        "I couldn't set the screen brightness.",
+                    "error": str(error)
+                }
+
+        return {
+            "success": False,
+            "response":
+                "Brightness must be between 0% and 100%."
+        }
+        # --------------------------------------------------------
+    # WINDOWS WI-FI CONTROL
+    # --------------------------------------------------------
+
+    if command in [
+        "turn wifi on",
+        "turn wi-fi on",
+        "wifi on",
+        "wi-fi on",
+        "enable wifi",
+        "enable wi-fi"
+    ]:
+
+        try:
+
+            import subprocess
+
+            subprocess.run(
+                [
+                    "netsh",
+                    "interface",
+                    "set",
+                    "interface",
+                    "Wi-Fi",
+                    "admin=enabled"
+                ],
+                capture_output=True,
+                text=True
+            )
+
+            return {
+                "success": True,
+                "action": "wifi_on",
+                "response": "Wi-Fi turned on."
+            }
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response": "I couldn't turn Wi-Fi on.",
+                "error": str(error)
+            }
+
+
+    if command in [
+        "turn wifi off",
+        "turn wi-fi off",
+        "wifi off",
+        "wi-fi off",
+        "disable wifi",
+        "disable wi-fi"
+    ]:
+
+        try:
+
+            import subprocess
+
+            subprocess.run(
+                [
+                    "netsh",
+                    "interface",
+                    "set",
+                    "interface",
+                    "Wi-Fi",
+                    "admin=disabled"
+                ],
+                capture_output=True,
+                text=True
+            )
+
+            return {
+                "success": True,
+                "action": "wifi_off",
+                "response": "Wi-Fi turned off."
+            }
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response": "I couldn't turn Wi-Fi off.",
+                "error": str(error)
+            }
+        # --------------------------------------------------------
+    # WINDOWS MEDIA CONTROL
+    # --------------------------------------------------------
+
+    media_commands = {
+        "play": "play",
+        "play music": "play",
+        "resume": "play",
+        "resume music": "play",
+
+        "pause": "pause",
+        "pause music": "pause",
+
+        "next": "next",
+        "next song": "next",
+        "next track": "next",
+
+        "previous": "previous",
+        "previous song": "previous",
+        "previous track": "previous",
+        "back": "previous"
+    }
+
+    if command in media_commands:
+
+        try:
+
+            import pyautogui
+
+            action = media_commands[command]
+
+            if action == "play":
+                pyautogui.press("playpause")
+                response_text = "Playing media."
+
+            elif action == "pause":
+                pyautogui.press("playpause")
+                response_text = "Media paused."
+
+            elif action == "next":
+                pyautogui.press("nexttrack")
+                response_text = "Playing next track."
+
+            elif action == "previous":
+                pyautogui.press("prevtrack")
+                response_text = "Playing previous track."
+
+            return {
+                "success": True,
+                "action": f"media_{action}",
+                "response": response_text
+            }
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't control media right now.",
+                "error": str(error)
+            }   
+        # --------------------------------------------------------
+    # WINDOWS SCREENSHOT CONTROL
+    # --------------------------------------------------------
+
+    screenshot_commands = [
+        "screenshot",
+        "take screenshot",
+        "capture screen",
+        "take a screenshot",
+        "capture my screen"
+    ]
+
+    if command in screenshot_commands:
+
+        try:
+
+            import pyautogui
+            from datetime import datetime
+            import os
+
+            os.makedirs("screenshots", exist_ok=True)
+
+            timestamp = datetime.now().strftime(
+                "%Y%m%d_%H%M%S"
+            )
+
+            screenshot_path = os.path.join(
+                "screenshots",
+                f"screenshot_{timestamp}.png"
+            )
+
+            pyautogui.screenshot(
+                screenshot_path
+            )
+
+            return {
+                "success": True,
+                "action": "screenshot",
+                "path": screenshot_path,
+                "response":
+                    f"Screenshot captured and saved as {screenshot_path}."
+            }
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't capture the screen.",
+                "error": str(error)
+            }     
+        # --------------------------------------------------------
+    # WINDOWS LOCK CONTROL
+    # --------------------------------------------------------
+
+    lock_commands = [
+        "lock",
+        "lock my laptop",
+        "lock my computer",
+        "lock computer",
+        "lock screen",
+        "lock the screen"
+    ]
+
+    if command in lock_commands:
+
+        try:
+
+            import ctypes
+
+            ctypes.windll.user32.LockWorkStation()
+
+            return {
+                "success": True,
+                "action": "lock_windows",
+                "response": "Locking your computer."
+            }
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't lock the computer.",
+                "error": str(error)
+            } 
+        # --------------------------------------------------------
+        # WINDOWS SHUTDOWN / RESTART
+        # --------------------------------------------------------
+
+    restart_commands = [
+        "restart",
+        "restart computer",
+        "restart laptop",
+        "restart my computer",
+        "restart my laptop"
+    ]
+
+    shutdown_commands = [
+        "shutdown",
+        "shutdown computer",
+        "shutdown laptop",
+        "shutdown my computer",
+        "shutdown my laptop"
+    ]
+
+    if command in restart_commands:
+
+        return {
+            "success": True,
+            "action": "restart_confirmation",
+            "response":
+                "Restart requested. Please confirm by saying: confirm restart."
+        }
+
+
+    if command in shutdown_commands:
+
+        return {
+            "success": True,
+            "action": "shutdown_confirmation",
+            "response":
+                "Shutdown requested. Please confirm by saying: confirm shutdown."
+        }
+
+
+    if command == "confirm restart":
+
+        try:
+
+            import subprocess
+
+            subprocess.Popen(
+                ["shutdown", "/r", "/t", "5"]
+            )
+
+            return {
+                "success": True,
+                "action": "restart",
+                "response": "Restarting your computer."
+            }
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't restart your computer right now.",
+                "error": str(error)
+            }
+
+    if command == "confirm shutdown":
+
+        try:
+
+            import subprocess
+
+            subprocess.Popen(
+                ["shutdown", "/s", "/t", "5"]
+            )
+
+            return {
+                "success": True,
+                "action": "shutdown",
+                "response": "Shutting down your computer."
+            }
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't shut down your computer right now.",
+                "error": str(error)
+            }
+
+        # --------------------------------------------------------
+    # WINDOWS CAMERA CONTROL
+    # --------------------------------------------------------
+
+    camera_commands = [
+        "open camera",
+        "open the camera",
+        "launch camera",
+        "start camera"
+    ]
+
+    if command in camera_commands:
+
+        try:
+
+            import subprocess
+
+            subprocess.Popen(
+                [
+                    "explorer.exe",
+                    "microsoft.windows.camera:"
+                ]
+            )
+
+            return {
+                "success": True,
+                "action": "open_camera",
+                "response": "Opening the camera."
+            }
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't open the camera.",
+                "error": str(error)
+            }    
 
     # --------------------------------------------------------
     # AI FALLBACK

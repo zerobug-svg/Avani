@@ -1163,7 +1163,10 @@ const agentPatterns = [
 
     /^unmute$/i,
     /^unmute volume$/i,
-    /^unmute my laptop$/i
+    /^unmute my laptop$/i,
+
+    /^(set )?volume(?: to)? \d{1,3}%?$/i,
+    /^make volume \d{1,3}%?$/i
 ];
 const isAgentCommand =
     agentPatterns.some(pattern =>

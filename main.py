@@ -1612,38 +1612,96 @@ async def agent_action(request: AgentRequest):
     # WINDOWS VOLUME CONTROL
     # --------------------------------------------------------
 
-        volume_actions = {
-        "increase volume": 1,
-        "turn up volume": 1,
-        "volume up": 1,
-        "make volume louder": 1,
-        "make it louder": 1,
-        "louder": 1,
+    volume_actions = {
+        "increase volume": "up",
+        "turn up volume": "up",
+        "volume up": "up",
+        "make volume louder": "up",
+        "make it louder": "up",
+        "louder": "up",
 
-        "decrease volume": -1,
-        "turn down volume": -1,
-        "volume down": -1,
-        "lower the volume": -1,
-        "make volume quieter": -1,
-        "make it quieter": -1,
-        "quieter": -1,
+        "decrease volume": "down",
+        "turn down volume": "down",
+        "volume down": "down",
+        "lower the volume": "down",
+        "make volume quieter": "down",
+        "make it quieter": "down",
+        "quieter": "down",
 
-        "mute volume": 0,
-        "mute": 0,
-        "mute my laptop": 0,
+        "mute volume": "mute",
+        "mute": "mute",
+        "mute my laptop": "mute",
 
-        "unmute volume": 0,
-        "unmute": 0,
-        "unmute my laptop": 0
+        "unmute volume": "unmute",
+        "unmute": "unmute",
+        "unmute my laptop": "unmute"
     }
 
+
+    # --------------------------------------------------------
+    # SET EXACT VOLUME
+    # --------------------------------------------------------
+
+    import re
+
+    volume_match = re.match(
+        r"^(?:set |make )?volume(?: to)?\s+(\d{1,3})%?$",
+        command
+    )
+
+
+    if volume_match:
+
+        try:
+
+            volume_percent = int(
+                volume_match.group(1)
+            )
+
+            if volume_percent > 100:
+                volume_percent = 100
+
+
+            from pycaw.pycaw import AudioUtilities
+
+            speakers = AudioUtilities.GetSpeakers()
+
+            volume = speakers.EndpointVolume
+
+            volume.SetMasterVolumeLevelScalar(
+                volume_percent / 100.0,
+                None
+            )
+
+
+            return {
+                "success": True,
+                "action": "set_volume",
+                "volume": volume_percent,
+                "response":
+                    f"Volume set to {volume_percent}%."
+            }
+
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't set the system volume.",
+                "error": str(error)
+            }
+
+
+    # --------------------------------------------------------
+    # VOLUME UP / DOWN / MUTE
+    # --------------------------------------------------------
 
     if command in volume_actions:
 
         try:
 
             import ctypes
-            import time
 
             action = volume_actions[command]
 
@@ -1652,11 +1710,11 @@ async def agent_action(request: AgentRequest):
             VK_VOLUME_UP = 0xAF
 
 
-            if action == 1:
+            if action == "up":
 
                 key = VK_VOLUME_UP
 
-            elif action == -1:
+            elif action == "down":
 
                 key = VK_VOLUME_DOWN
 
@@ -1672,8 +1730,6 @@ async def agent_action(request: AgentRequest):
                 0
             )
 
-            time.sleep(0.05)
-
             ctypes.windll.user32.keybd_event(
                 key,
                 0,
@@ -1687,10 +1743,10 @@ async def agent_action(request: AgentRequest):
                 "action": "volume_control",
                 "response": (
                     "Volume increased."
-                    if action == 1
+                    if action == "up"
                     else
                     "Volume decreased."
-                    if action == -1
+                    if action == "down"
                     else
                     "Volume toggled."
                 )
@@ -1704,7 +1760,7 @@ async def agent_action(request: AgentRequest):
                 "response":
                     "I couldn't control the volume.",
                 "error": str(error)
-            }        
+            }
                        
     # --------------------------------------------------------
     # CALCULATOR

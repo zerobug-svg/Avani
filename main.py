@@ -1607,7 +1607,93 @@ async def agent_action(request: AgentRequest):
                     "response":
                         f"I couldn't open {system_name}.",
                     "error": str(error)
-                }            
+                }
+         # --------------------------------------------------------
+    # WINDOWS VOLUME CONTROL
+    # --------------------------------------------------------
+
+    volume_actions = {
+        "increase volume": 1,
+        "turn up volume": 1,
+        "volume up": 1,
+        "decrease volume": -1,
+        "turn down volume": -1,
+        "volume down": -1,
+        "mute volume": 0,
+        "mute": 0,
+        "unmute volume": 0,
+        "unmute": 0
+    }
+
+
+    if command in volume_actions:
+
+        try:
+
+            import ctypes
+            import time
+
+            action = volume_actions[command]
+
+            VK_VOLUME_MUTE = 0xAD
+            VK_VOLUME_DOWN = 0xAE
+            VK_VOLUME_UP = 0xAF
+
+
+            if action == 1:
+
+                key = VK_VOLUME_UP
+
+            elif action == -1:
+
+                key = VK_VOLUME_DOWN
+
+            else:
+
+                key = VK_VOLUME_MUTE
+
+
+            ctypes.windll.user32.keybd_event(
+                key,
+                0,
+                0,
+                0
+            )
+
+            time.sleep(0.05)
+
+            ctypes.windll.user32.keybd_event(
+                key,
+                0,
+                2,
+                0
+            )
+
+
+            return {
+                "success": True,
+                "action": "volume_control",
+                "response": (
+                    "Volume increased."
+                    if action == 1
+                    else
+                    "Volume decreased."
+                    if action == -1
+                    else
+                    "Volume toggled."
+                )
+            }
+
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't control the volume.",
+                "error": str(error)
+            }        
+                       
     # --------------------------------------------------------
     # CALCULATOR
     # --------------------------------------------------------

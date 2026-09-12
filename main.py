@@ -909,34 +909,22 @@ async def upload_file(
 
 @app.get("/health")
 def health():
-
-    ollama_status = "Disconnected"
-
-    try:
-
-        response = requests.get(
-            "http://127.0.0.1:11434/api/tags",
-            timeout=3
-        )
-
-        if response.ok:
-
-            ollama_status = "Connected"
-
-
-    except Exception:
-
-        ollama_status = "Disconnected"
-
-
     return {
         "status": "online",
         "assistant": "Avani",
         "owner": "Prasanna",
-        "ollama": ollama_status,
-       "model": OLLAMA_MODEL
+        "provider": AI_PROVIDER,
+        "model": (
+            GEMINI_MODEL
+            if AI_PROVIDER == "gemini"
+            else OLLAMA_MODEL
+        ),
+        "ollama": (
+            "Connected"
+            if AI_PROVIDER == "ollama"
+            else "Not Used"
+        )
     }
-
 
 # =========================================================
 # FILE INTELLIGENCE - CHAT WITH FILE

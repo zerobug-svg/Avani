@@ -343,6 +343,306 @@ def generate_ai_response(
 
     return text
 
+# ============================================================
+# WEB SEARCH CONFIGURATION
+# ============================================================
+
+TAVILY_API_KEY = os.getenv(
+    "TAVILY_API_KEY"
+)
+
+
+# ============================================================
+# WEB SEARCH
+# ============================================================
+
+def search_web(query: str):
+
+    if not TAVILY_API_KEY:
+
+        return {
+            "success": False,
+            "results": [],
+            "message":
+                "Web search is not configured."
+        }
+
+
+    try:
+
+        response = requests.post(
+
+            "https://api.tavily.com/search",
+
+            json={
+                "api_key": TAVILY_API_KEY,
+                "query": query,
+                "search_depth": "basic",
+                "include_answer": False,
+                "max_results": 5
+            },
+
+            timeout=30
+        )
+
+
+        if not response.ok:
+
+            return {
+                "success": False,
+                "results": [],
+                "message":
+                    "Web search could not be completed."
+            }
+
+
+        data = response.json()
+
+        results = []
+
+
+        for item in data.get(
+            "results",
+            []
+        ):
+
+            results.append({
+
+                "title":
+                    item.get(
+                        "title",
+                        ""
+                    ),
+
+                "url":
+                    item.get(
+                        "url",
+                        ""
+                    ),
+
+                "content":
+                    item.get(
+                        "content",
+                        ""
+                    )
+
+            })
+
+
+        return {
+            "success": True,
+            "results": results
+        }
+
+
+    except Exception as error:
+
+        print(
+            "WEB SEARCH ERROR:",
+            error
+        )
+
+        return {
+            "success": False,
+            "results": [],
+            "message":
+                "Web search is temporarily unavailable."
+        }
+
+
+# ============================================================
+# WEB SEARCH - CHAT WITH WEB RESULTS
+# ============================================================
+
+class WebSearchRequest(BaseModel):
+
+    message: str
+
+
+@app.post("/web-search")
+async def web_search_chat(
+    request: WebSearchRequest
+):
+
+    try:
+
+        # -------------------------------------------------
+        # Search the web
+        # -------------------------------------------------
+
+        search_result = search_web(
+            request.message
+        )
+
+
+        if not search_result.get(
+            "success"
+        ):
+
+            return {
+
+                "success": False,
+
+                "response":
+                    search_result.get(
+                        "message",
+                        "Web search could not be completed."
+                    )
+
+            }
+
+
+        results = (
+            search_result.get(
+                "results",
+                []
+            )
+        )
+
+
+        if not results:
+
+            return {
+
+                "success": False,
+
+                "response":
+                    "I couldn't find useful results for that search."
+            }
+
+
+        # -------------------------------------------------
+        # Prepare search results for Avani
+        # -------------------------------------------------
+
+        web_context_parts = []
+
+
+        for index, result in enumerate(
+            results,
+            start=1
+        ):
+
+            web_context_parts.append(
+
+                f"""
+SOURCE {index}
+
+TITLE:
+{result.get("title", "")}
+
+URL:
+{result.get("url", "")}
+
+CONTENT:
+{result.get("content", "")}
+"""
+            )
+
+
+        web_context = (
+            "\n\n".join(
+                web_context_parts
+            )
+        )
+
+
+        # -------------------------------------------------
+        # Create web-aware prompt
+        # -------------------------------------------------
+
+        web_prompt = (
+
+            SYSTEM_PROMPT +
+
+            "\n\n"
+
+            "You are answering a question "
+            "using fresh web search results.\n\n"
+
+            "WEB SEARCH RESULTS:\n"
+            "====================\n"
+
+            + web_context +
+
+            "\n\n"
+            "====================\n\n"
+
+            "USER QUESTION:\n"
+
+            + request.message +
+
+            "\n\n"
+
+            "Answer the user's question using "
+            "the web search results above. "
+
+            "Prefer information supported by "
+            "the search results. "
+
+            "If the results do not contain "
+            "enough information, say so clearly. "
+
+            "Do not invent facts. "
+
+            "When useful, mention the source "
+            "title or website in your answer."
+        )
+
+
+        # -------------------------------------------------
+        # Generate AI response
+        # -------------------------------------------------
+
+        try:
+
+            response_text = generate_ai_response(
+                prompt=web_prompt,
+                model=OLLAMA_MODEL,
+                timeout=120
+            )
+
+        except Exception as error:
+
+            print(
+                "WEB AI RESPONSE ERROR:",
+                error
+            )
+
+            return {
+                "success": False,
+                "response":
+                    "I found web results, but I couldn't generate an answer right now.",
+                "error":
+                    str(error)
+            }
+
+
+        return {
+            "success": True,
+            "response":
+                response_text,
+            "sources":
+                results
+        }
+
+
+    except Exception as error:
+
+        print(
+            "WEB SEARCH CHAT ERROR:",
+            error
+        )
+
+        return {
+            "success": False,
+            "response":
+                "I couldn't complete the web search right now.",
+            "error":
+                str(error)
+        }
+
+
 
 # ============================================================
 # UPLOAD FOLDER

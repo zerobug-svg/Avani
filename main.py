@@ -938,7 +938,6 @@ class FileChatRequest(BaseModel):
     message: str
     file_path: str
 
-
 @app.post("/chat-with-file")
 async def chat_with_file(request: FileChatRequest):
 
@@ -959,7 +958,6 @@ async def chat_with_file(request: FileChatRequest):
         if not requested_path.startswith(
             upload_folder + os.sep
         ):
-
             return {
                 "success": False,
                 "response":
@@ -974,7 +972,6 @@ async def chat_with_file(request: FileChatRequest):
         if not os.path.exists(
             requested_path
         ):
-
             return {
                 "success": False,
                 "response":
@@ -991,7 +988,7 @@ async def chat_with_file(request: FileChatRequest):
         )[1].lower()
 
 
-                # =================================================
+        # =================================================
         # IMAGE INTELLIGENCE
         # =================================================
 
@@ -1003,10 +1000,7 @@ async def chat_with_file(request: FileChatRequest):
 
             try:
 
-                # -------------------------------------------------
-                # Read image as binary data
-                # -------------------------------------------------
-
+                # Read image
                 with open(
                     requested_path,
                     "rb"
@@ -1017,10 +1011,7 @@ async def chat_with_file(request: FileChatRequest):
                     )
 
 
-                # -------------------------------------------------
                 # Convert image to Base64
-                # -------------------------------------------------
-
                 image_base64 = (
                     base64.b64encode(
                         image_bytes
@@ -1030,12 +1021,8 @@ async def chat_with_file(request: FileChatRequest):
                 )
 
 
-                # -------------------------------------------------
-                # Create image-aware prompt
-                # -------------------------------------------------
-
+                # Image-aware prompt
                 image_prompt = (
-
                     SYSTEM_PROMPT +
 
                     "\n\n"
@@ -1062,10 +1049,8 @@ async def chat_with_file(request: FileChatRequest):
                 )
 
 
-                # -------------------------------------------------
-                # Generate image AI response
-                # -------------------------------------------------
-
+                # Generate response using
+                # configured AI provider
                 response_text = generate_ai_response(
                     prompt=image_prompt,
                     model=OLLAMA_VISION_MODEL,
@@ -1079,44 +1064,33 @@ async def chat_with_file(request: FileChatRequest):
                 )
 
 
-                # -------------------------------------------------
-                # Return image response
-                # -------------------------------------------------
-
                 return {
-
                     "success": True,
-
                     "response":
                         response_text,
-
                     "filename":
                         os.path.basename(
                             requested_path
                         )
-
                 }
 
 
             except Exception as error:
 
                 print(
-                    "IMAGE CHAT ERROR:",
+                    "IMAGE AI RESPONSE ERROR:",
                     error
                 )
 
                 return {
-
                     "success": False,
-
                     "response":
                         "I couldn't analyze the image right now.",
-
                     "error":
                         str(error)
-
                 }
- 
+
+
         # =================================================
         # DOCUMENT INTELLIGENCE
         # =================================================
@@ -1147,6 +1121,7 @@ async def chat_with_file(request: FileChatRequest):
                     pages.append(
                         page_text
                     )
+
 
             extracted_text = (
                 "\n\n".join(
@@ -1197,6 +1172,7 @@ async def chat_with_file(request: FileChatRequest):
                         paragraph_text
                     )
 
+
             extracted_text = (
                 "\n\n".join(
                     paragraphs
@@ -1231,7 +1207,7 @@ async def chat_with_file(request: FileChatRequest):
 
 
         # -------------------------------------------------
-        # Protect Ollama from extremely large documents
+        # Protect AI from extremely large documents
         # -------------------------------------------------
 
         MAX_DOCUMENT_CHARS = 80000
@@ -1261,13 +1237,12 @@ async def chat_with_file(request: FileChatRequest):
         # -------------------------------------------------
 
         file_prompt = (
-
             SYSTEM_PROMPT +
 
             "\n\n"
 
             "You are analyzing a document "
-            "provided by the user.\n\n"
+            "provided by Prasanna.\n\n"
 
             "DOCUMENT CONTENT:\n"
             "--------------------\n"
@@ -1286,59 +1261,25 @@ async def chat_with_file(request: FileChatRequest):
             "\n\n"
 
             "Answer the user's question using "
-            "the document content above. "
+            "the document content above.\n\n"
 
             "If the answer is not present in "
             "the document, clearly say that "
             "the information is not available "
-            "in the document. "
+            "in the document.\n\n"
 
             "Do not invent information."
         )
 
 
         # -------------------------------------------------
-        # Send document to Ollama
+        # Generate response using configured provider
         # -------------------------------------------------
 
-        ollama_response = requests.post(
-
-            OLLAMA_URL,
-
-            json={
-                "model": "llama3.2:3b",
-                "prompt": file_prompt,
-                "stream": False
-            },
-
+        response_text = generate_ai_response(
+            prompt=file_prompt,
+            model=OLLAMA_MODEL,
             timeout=180
-        )
-
-
-        # -------------------------------------------------
-        # Check Ollama response
-        # -------------------------------------------------
-
-        if not ollama_response.ok:
-
-            return {
-                "success": False,
-                "response":
-                    "Ollama could not process the document."
-            }
-
-
-        result = (
-            ollama_response.json()
-        )
-
-
-        response_text = (
-            result.get(
-                "response",
-                ""
-            )
-            .strip()
         )
 
 
@@ -1351,17 +1292,13 @@ async def chat_with_file(request: FileChatRequest):
 
 
         return {
-
             "success": True,
-
             "response":
                 response_text,
-
             "filename":
                 os.path.basename(
                     requested_path
                 )
-
         }
 
 
@@ -1373,13 +1310,9 @@ async def chat_with_file(request: FileChatRequest):
         )
 
         return {
-
             "success": False,
-
             "response":
                 "I couldn't analyze the attached file right now.",
-
             "error":
                 str(error)
-
         }

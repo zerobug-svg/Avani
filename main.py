@@ -9,10 +9,14 @@ import base64
 from dotenv import load_dotenv
 
 load_dotenv()
+app = FastAPI(
+    title="Avani",
+    description="Prasanna's Personal AI Assistant",
+    version="1.0.0"
+)
 
 from pypdf import PdfReader
 from docx import Document
-
 
 # ============================================================
 # AI PROVIDER CONFIGURATION
@@ -22,6 +26,10 @@ AI_PROVIDER = os.getenv(
     "AVANI_AI_PROVIDER",
     "ollama"
 ).lower()
+
+# ============================================================
+# OLLAMA
+# ============================================================
 
 OLLAMA_URL = os.getenv(
     "OLLAMA_URL",
@@ -37,6 +45,10 @@ OLLAMA_VISION_MODEL = os.getenv(
     "OLLAMA_VISION_MODEL",
     "gemma3:4b"
 )
+
+# ============================================================
+# GEMINI
+# ============================================================
 
 GEMINI_API_KEY = os.getenv(
     "GEMINI_API_KEY"
@@ -54,23 +66,24 @@ GEMINI_URL = (
     + ":generateContent"
 )
 
-
 # ============================================================
-# AVANI - PRASANNA'S PERSONAL AI ASSISTANT
+# OPENROUTER
 # ============================================================
 
-app = FastAPI(
-    title="Avani",
-    description="Prasanna's Personal AI Assistant",
-    version="2.2.0"
+OPENROUTER_API_KEY = os.getenv(
+    "OPENROUTER_API_KEY"
+)
+
+OPENROUTER_MODEL = os.getenv(
+    "OPENROUTER_MODEL",
+    "openrouter/free"
+)
+
+OPENROUTER_URL = (
+    "https://openrouter.ai/api/v1/chat/completions"
 )
 
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
-
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 # ============================================================
 # COMMON AI RESPONSE FUNCTION
 # ============================================================
@@ -89,8 +102,120 @@ def generate_ai_response(
         AVANI_AI_PROVIDER=ollama
 
     Cloud:
+        AVANI_AI_PROVIDER=openrouter
+
+    Gemini:
         AVANI_AI_PROVIDER=gemini
     """
+
+    # ========================================================
+    # OPENROUTER
+    # ========================================================
+
+    if AI_PROVIDER == "openrouter":
+
+        if not OPENROUTER_API_KEY:
+            raise RuntimeError(
+                "OPENROUTER_API_KEY is not configured."
+            )
+
+        # Existing code sometimes passes OLLAMA_MODEL.
+        # Do not send that model to OpenRouter.
+        if not model or model == OLLAMA_MODEL:
+            selected_model = OPENROUTER_MODEL
+        else:
+            selected_model = model
+
+        message_content = [
+            {
+                "type": "text",
+                "text": prompt
+            }
+        ]
+
+        # Add image when image intelligence is used
+        if image_base64:
+
+            message_content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": (
+                            f"data:{mime_type};base64,"
+                            f"{image_base64}"
+                        )
+                    }
+                }
+            )
+
+        payload = {
+            "model": selected_model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": message_content
+                }
+            ],
+            "stream": False
+        }
+
+        response = requests.post(
+            OPENROUTER_URL,
+            headers={
+                "Authorization": (
+                    f"Bearer {OPENROUTER_API_KEY}"
+                ),
+                "Content-Type": "application/json",
+                "HTTP-Referer": (
+                    "https://avani-eoxi.onrender.com"
+                ),
+                "X-Title": "Avani - Prasanna's AI Assistant"
+            },
+            json=payload,
+            timeout=timeout
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        choices = data.get(
+            "choices",
+            []
+        )
+
+        if not choices:
+            raise RuntimeError(
+                "OpenRouter returned no response."
+            )
+
+        message = choices[0].get(
+            "message",
+            {}
+        )
+
+        text = message.get(
+            "content",
+            ""
+        )
+
+        # Some models may return structured content.
+        if isinstance(text, list):
+
+            text = "".join(
+                item.get("text", "")
+                for item in text
+                if isinstance(item, dict)
+            )
+
+        text = str(text).strip()
+
+        if not text:
+            raise RuntimeError(
+                "OpenRouter returned an empty response."
+            )
+
+        return text
 
     # ========================================================
     # GEMINI
@@ -111,6 +236,7 @@ def generate_ai_response(
 
         # Add image when image intelligence is being used
         if image_base64:
+
             parts.append(
                 {
                     "inline_data": {
@@ -142,7 +268,10 @@ def generate_ai_response(
 
         data = response.json()
 
-        candidates = data.get("candidates", [])
+        candidates = data.get(
+            "candidates",
+            []
+        )
 
         if not candidates:
             raise RuntimeError(
@@ -183,6 +312,7 @@ def generate_ai_response(
 
     # Ollama vision model
     if image_base64:
+
         payload["model"] = (
             model or OLLAMA_VISION_MODEL
         )
@@ -212,290 +342,13 @@ def generate_ai_response(
         )
 
     return text
-UPLOAD_FOLDER = "uploads"
-
-def search_web(query: str):
-
-    if not TAVILY_API_KEY:
-
-        return {
-            "success": False,
-            "results": [],
-            "message":
-                "Web search is not configured."
-        }
 
 
-    try:
-
-        response = requests.post(
-
-            "https://api.tavily.com/search",
-
-            json={
-                "api_key": TAVILY_API_KEY,
-                "query": query,
-                "search_depth": "basic",
-                "include_answer": False,
-                "max_results": 5
-            },
-
-            timeout=30
-        )
-
-
-        if not response.ok:
-
-            return {
-                "success": False,
-                "results": [],
-                "message":
-                    "Web search could not be completed."
-            }
-
-
-        data = response.json()
-
-        results = []
-
-
-        for item in data.get(
-            "results",
-            []
-        ):
-
-            results.append({
-
-                "title":
-                    item.get(
-                        "title",
-                        ""
-                    ),
-
-                "url":
-                    item.get(
-                        "url",
-                        ""
-                    ),
-
-                "content":
-                    item.get(
-                        "content",
-                        ""
-                    )
-
-            })
-
-
-        return {
-            "success": True,
-            "results": results
-        }
-
-
-    except Exception as error:
-
-        print(
-            "WEB SEARCH ERROR:",
-            error
-        )
-
-        return {
-            "success": False,
-            "results": [],
-            "message":
-                "Web search is temporarily unavailable."
-        }
-    # ============================================================
-# WEB SEARCH - CHAT WITH WEB RESULTS
+# ============================================================
+# UPLOAD FOLDER
 # ============================================================
 
-class WebSearchRequest(BaseModel):
-
-    message: str
-
-
-@app.post("/web-search")
-async def web_search_chat(request: WebSearchRequest):
-
-    try:
-
-        # -------------------------------------------------
-        # Search the web
-        # -------------------------------------------------
-
-        search_result = search_web(
-            request.message
-        )
-
-
-        if not search_result.get(
-            "success"
-        ):
-
-            return {
-
-                "success": False,
-
-                "response":
-                    search_result.get(
-                        "message",
-                        "Web search could not be completed."
-                    )
-
-            }
-
-
-        results = (
-            search_result.get(
-                "results",
-                []
-            )
-        )
-
-
-        if not results:
-
-            return {
-
-                "success": False,
-
-                "response":
-                    "I couldn't find useful results for that search."
-            }
-
-
-        # -------------------------------------------------
-        # Prepare search results for Avani
-        # -------------------------------------------------
-
-        web_context_parts = []
-
-
-        for index, result in enumerate(
-            results,
-            start=1
-        ):
-
-            web_context_parts.append(
-
-                f"""
-SOURCE {index}
-
-TITLE:
-{result.get("title", "")}
-
-URL:
-{result.get("url", "")}
-
-CONTENT:
-{result.get("content", "")}
-"""
-            )
-
-
-        web_context = (
-            "\n\n".join(
-                web_context_parts
-            )
-        )
-
-
-        # -------------------------------------------------
-        # Create web-aware prompt
-        # -------------------------------------------------
-
-        web_prompt = (
-
-            SYSTEM_PROMPT +
-
-            "\n\n"
-
-            "You are answering a question "
-            "using fresh web search results.\n\n"
-
-            "WEB SEARCH RESULTS:\n"
-            "====================\n"
-
-            + web_context +
-
-            "\n\n"
-            "====================\n\n"
-
-            "USER QUESTION:\n"
-
-            + request.message +
-
-            "\n\n"
-
-            "Answer the user's question using "
-            "the web search results above. "
-
-            "Prefer information supported by "
-            "the search results. "
-
-            "If the results do not contain "
-            "enough information, say so clearly. "
-
-            "Do not invent facts. "
-
-            "When useful, mention the source "
-            "title or website in your answer."
-        )
-
-
-               # -------------------------------------------------
-        # Generate AI response
-        # -------------------------------------------------
-
-        try:
-
-            response_text = generate_ai_response(
-                prompt=web_prompt,
-                model=OLLAMA_MODEL,
-                timeout=120
-            )
-
-        except Exception as error:
-
-            print(
-                "WEB AI RESPONSE ERROR:",
-                error
-            )
-
-            return {
-                "success": False,
-                "response":
-                    "I found web results, but I couldn't generate an answer right now.",
-                "error":
-                    str(error)
-            }
-
-
-        return {
-            "success": True,
-            "response":
-                response_text,
-            "sources":
-                results
-        }
-
-
-    except Exception as error:
-
-        print(
-            "WEB SEARCH CHAT ERROR:",
-            error
-        )
-
-        return {
-            "success": False,
-            "response":
-                "I couldn't complete the web search right now.",
-            "error":
-                str(error)
-        }
-
+UPLOAD_FOLDER = "uploads"
 
 # ============================================================
 # CREATE UPLOAD FOLDER

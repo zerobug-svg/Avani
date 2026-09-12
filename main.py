@@ -121,10 +121,13 @@ def generate_ai_response(
 
         # Existing code sometimes passes OLLAMA_MODEL.
         # Do not send that model to OpenRouter.
-        if not model or model == OLLAMA_MODEL:
-            selected_model = OPENROUTER_MODEL
+        if not model or model in {
+         OLLAMA_MODEL,
+          OLLAMA_VISION_MODEL
+}:
+          selected_model = OPENROUTER_MODEL
         else:
-            selected_model = model
+         selected_model = model
 
         message_content = [
             {

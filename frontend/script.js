@@ -1140,7 +1140,30 @@ const agentPatterns = [
     /^open .+/i,
     /^go to .+/i,
     /^calculate .+/i,
-    /^what is .+/i
+    /^what is .+/i,
+
+    /^increase volume$/i,
+    /^turn up volume$/i,
+    /^volume up$/i,
+    /^make volume louder$/i,
+    /^make it louder$/i,
+    /^louder$/i,
+
+    /^decrease volume$/i,
+    /^turn down volume$/i,
+    /^volume down$/i,
+    /^lower the volume$/i,
+    /^make volume quieter$/i,
+    /^make it quieter$/i,
+    /^quieter$/i,
+
+    /^mute$/i,
+    /^mute volume$/i,
+    /^mute my laptop$/i,
+
+    /^unmute$/i,
+    /^unmute volume$/i,
+    /^unmute my laptop$/i
 ];
 const isAgentCommand =
     agentPatterns.some(pattern =>

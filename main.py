@@ -1612,17 +1612,29 @@ async def agent_action(request: AgentRequest):
     # WINDOWS VOLUME CONTROL
     # --------------------------------------------------------
 
-    volume_actions = {
+        volume_actions = {
         "increase volume": 1,
         "turn up volume": 1,
         "volume up": 1,
+        "make volume louder": 1,
+        "make it louder": 1,
+        "louder": 1,
+
         "decrease volume": -1,
         "turn down volume": -1,
         "volume down": -1,
+        "lower the volume": -1,
+        "make volume quieter": -1,
+        "make it quieter": -1,
+        "quieter": -1,
+
         "mute volume": 0,
         "mute": 0,
+        "mute my laptop": 0,
+
         "unmute volume": 0,
-        "unmute": 0
+        "unmute": 0,
+        "unmute my laptop": 0
     }
 
 

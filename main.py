@@ -1093,13 +1093,10 @@ class FileChatRequest(BaseModel):
 
 @app.post("/chat-with-file")
 async def chat_with_file(request: FileChatRequest):
-
     try:
-
         # -------------------------------------------------
         # Validate file path
         # -------------------------------------------------
-
         requested_path = os.path.abspath(
             request.file_path
         )
@@ -1113,33 +1110,25 @@ async def chat_with_file(request: FileChatRequest):
         ):
             return {
                 "success": False,
-                "response":
-                    "I couldn't access that file."
+                "response": "I couldn't access that file."
             }
-
 
         # -------------------------------------------------
         # Check file exists
         # -------------------------------------------------
-
-        if not os.path.exists(
-            requested_path
-        ):
+        if not os.path.exists(requested_path):
             return {
                 "success": False,
-                "response":
-                    "The attached file could not be found."
+                "response": "The attached file could not be found."
             }
-
-
-        # -------------------------------------------------
-        # Get extension
-        # -------------------------------------------------
 
         extension = os.path.splitext(
             requested_path
         )[1].lower()
 
+        filename = os.path.basename(
+            requested_path
+        )
 
         # =================================================
         # IMAGE INTELLIGENCE
@@ -1152,58 +1141,48 @@ async def chat_with_file(request: FileChatRequest):
         }:
 
             try:
-
-                # Read image
                 with open(
                     requested_path,
                     "rb"
                 ) as image_file:
 
-                    image_bytes = (
-                        image_file.read()
-                    )
+                    image_bytes = image_file.read()
 
+                image_base64 = base64.b64encode(
+                    image_bytes
+                ).decode("utf-8")
 
-                # Convert image to Base64
-                image_base64 = (
-                    base64.b64encode(
-                        image_bytes
-                    ).decode(
-                        "utf-8"
-                    )
-                )
+                # -----------------------------------------
+                # Image prompt
+                # -----------------------------------------
 
-
-                # Image-aware prompt
                 image_prompt = (
                     SYSTEM_PROMPT +
-
                     "\n\n"
-
                     "You are analyzing an image "
                     "provided by Prasanna.\n\n"
-
-                    "Carefully examine the image "
-                    "and answer the user's question "
-                    "using only information that can "
-                    "be determined from the image.\n\n"
-
-                    "If the image contains text, "
-                    "read and use that text when "
-                    "relevant.\n\n"
-
+                    "Carefully examine the image and "
+                    "answer the user's question using "
+                    "the image.\n\n"
+                    "If the image contains text, read "
+                    "and use that text when relevant.\n\n"
                     "If something cannot be determined "
-                    "from the image, clearly say so. "
+                    "from the image, clearly say so.\n\n"
                     "Do not invent information.\n\n"
-
                     "USER QUESTION:\n"
-
                     + request.message
                 )
 
+                # -----------------------------------------
+                # Use the common AI provider function
+                #
+                # LOCAL:
+                # Ollama
+                #
+                # RENDER:
+                # OpenRouter
+                # -----------------------------------------
 
-                # Generate response using
-                # configured AI provider
                 response_text = generate_ai_response(
                     prompt=image_prompt,
                     model=OLLAMA_VISION_MODEL,
@@ -1216,22 +1195,22 @@ async def chat_with_file(request: FileChatRequest):
                     timeout=180
                 )
 
+                if not response_text:
+                    response_text = (
+                        "I couldn't generate an answer "
+                        "from the image."
+                    )
 
                 return {
                     "success": True,
-                    "response":
-                        response_text,
-                    "filename":
-                        os.path.basename(
-                            requested_path
-                        )
+                    "response": response_text,
+                    "filename": filename
                 }
-
 
             except Exception as error:
 
                 print(
-                    "IMAGE AI RESPONSE ERROR:",
+                    "IMAGE CHAT ERROR:",
                     error
                 )
 
@@ -1239,17 +1218,14 @@ async def chat_with_file(request: FileChatRequest):
                     "success": False,
                     "response":
                         "I couldn't analyze the image right now.",
-                    "error":
-                        str(error)
+                    "error": str(error)
                 }
-
 
         # =================================================
         # DOCUMENT INTELLIGENCE
         # =================================================
 
         extracted_text = ""
-
 
         # -------------------------------------------------
         # PDF
@@ -1265,23 +1241,14 @@ async def chat_with_file(request: FileChatRequest):
 
             for page in reader.pages:
 
-                page_text = (
-                    page.extract_text()
-                )
+                page_text = page.extract_text()
 
                 if page_text:
-
-                    pages.append(
-                        page_text
-                    )
-
+                    pages.append(page_text)
 
             extracted_text = (
-                "\n\n".join(
-                    pages
-                )
+                "\n\n".join(pages)
             ).strip()
-
 
         # -------------------------------------------------
         # TXT
@@ -1296,10 +1263,7 @@ async def chat_with_file(request: FileChatRequest):
                 errors="ignore"
             ) as file:
 
-                extracted_text = (
-                    file.read()
-                )
-
+                extracted_text = file.read()
 
         # -------------------------------------------------
         # DOCX
@@ -1320,21 +1284,42 @@ async def chat_with_file(request: FileChatRequest):
                 )
 
                 if paragraph_text:
-
                     paragraphs.append(
                         paragraph_text
                     )
 
-
             extracted_text = (
-                "\n\n".join(
-                    paragraphs
-                )
+                "\n\n".join(paragraphs)
             ).strip()
 
+        # -------------------------------------------------
+        # CSV
+        # -------------------------------------------------
+
+        elif extension == ".csv":
+
+            try:
+
+                with open(
+                    requested_path,
+                    "r",
+                    encoding="utf-8",
+                    errors="ignore"
+                ) as file:
+
+                    extracted_text = file.read()
+
+            except Exception as error:
+
+                return {
+                    "success": False,
+                    "response":
+                        "I couldn't read the CSV file.",
+                    "error": str(error)
+                }
 
         # -------------------------------------------------
-        # Unsupported file type
+        # Unsupported
         # -------------------------------------------------
 
         else:
@@ -1345,12 +1330,11 @@ async def chat_with_file(request: FileChatRequest):
                     "I can see the file, but I cannot analyze this file type yet."
             }
 
-
         # -------------------------------------------------
         # Empty document
         # -------------------------------------------------
 
-        if not extracted_text:
+        if not extracted_text.strip():
 
             return {
                 "success": False,
@@ -1358,9 +1342,8 @@ async def chat_with_file(request: FileChatRequest):
                     "I couldn't extract readable text from this file."
             }
 
-
         # -------------------------------------------------
-        # Protect AI from extremely large documents
+        # Limit document size
         # -------------------------------------------------
 
         MAX_DOCUMENT_CHARS = 80000
@@ -1384,49 +1367,41 @@ async def chat_with_file(request: FileChatRequest):
 
             document_note = ""
 
-
         # -------------------------------------------------
-        # Create file-aware prompt
+        # Document-aware prompt
         # -------------------------------------------------
 
         file_prompt = (
             SYSTEM_PROMPT +
-
             "\n\n"
-
             "You are analyzing a document "
             "provided by Prasanna.\n\n"
-
             "DOCUMENT CONTENT:\n"
             "--------------------\n"
-
             + extracted_text +
-
             document_note +
-
             "\n\n"
             "--------------------\n\n"
-
             "USER QUESTION:\n"
-
             + request.message +
-
             "\n\n"
-
             "Answer the user's question using "
             "the document content above.\n\n"
-
             "If the answer is not present in "
             "the document, clearly say that "
             "the information is not available "
             "in the document.\n\n"
-
             "Do not invent information."
         )
 
-
         # -------------------------------------------------
-        # Generate response using configured provider
+        # Use common AI provider
+        #
+        # LOCAL:
+        # Ollama
+        #
+        # RENDER:
+        # OpenRouter
         # -------------------------------------------------
 
         response_text = generate_ai_response(
@@ -1435,7 +1410,6 @@ async def chat_with_file(request: FileChatRequest):
             timeout=180
         )
 
-
         if not response_text:
 
             response_text = (
@@ -1443,17 +1417,11 @@ async def chat_with_file(request: FileChatRequest):
                 "from the document."
             )
 
-
         return {
             "success": True,
-            "response":
-                response_text,
-            "filename":
-                os.path.basename(
-                    requested_path
-                )
+            "response": response_text,
+            "filename": filename
         }
-
 
     except Exception as error:
 
@@ -1466,8 +1434,7 @@ async def chat_with_file(request: FileChatRequest):
             "success": False,
             "response":
                 "I couldn't analyze the attached file right now.",
-            "error":
-                str(error)
+            "error": str(error)
         }
 
 # ============================================================

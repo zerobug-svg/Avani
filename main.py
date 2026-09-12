@@ -1461,6 +1461,87 @@ async def agent_action(request: AgentRequest):
                         f"I couldn't open {app_name}.",
                     "error": str(error)
                 }
+        # --------------------------------------------------------
+    # OPEN WINDOWS FOLDERS
+    # --------------------------------------------------------
+
+    import os
+
+
+    folder_map = {
+        "desktop": os.path.join(
+            os.path.expanduser("~"),
+            "Desktop"
+        ),
+
+        "downloads": os.path.join(
+            os.path.expanduser("~"),
+            "Downloads"
+        ),
+
+        "documents": os.path.join(
+            os.path.expanduser("~"),
+            "Documents"
+        ),
+
+        "pictures": os.path.join(
+            os.path.expanduser("~"),
+            "Pictures"
+        ),
+
+        "videos": os.path.join(
+            os.path.expanduser("~"),
+            "Videos"
+        ),
+
+        "music": os.path.join(
+            os.path.expanduser("~"),
+            "Music"
+        )
+    }
+
+
+    if command.startswith("open "):
+
+        folder_name = command[5:].strip()
+
+
+        if folder_name.startswith("my "):
+            folder_name = folder_name[3:].strip()
+
+
+        if folder_name in folder_map:
+
+            folder_path = folder_map[folder_name]
+
+
+            if os.path.exists(folder_path):
+
+                try:
+
+                    subprocess.Popen(
+                        [
+                            "explorer.exe",
+                            folder_path
+                        ]
+                    )
+
+                    return {
+                        "success": True,
+                        "action": "open_folder",
+                        "folder": folder_name,
+                        "response":
+                            f"Opening your {folder_name}."
+                    }
+
+                except Exception as error:
+
+                    return {
+                        "success": False,
+                        "response":
+                            f"I couldn't open your {folder_name}.",
+                        "error": str(error)
+                    }         
     # --------------------------------------------------------
     # CALCULATOR
     # --------------------------------------------------------

@@ -1246,6 +1246,7 @@ const exactAgentPatterns = [
     /^start camera$/i
 ];
 
+
 const isExactAgentCommand =
     exactAgentPatterns.some(pattern =>
         pattern.test(finalMessage.trim())
@@ -1253,13 +1254,26 @@ const isExactAgentCommand =
 
 
 /*
-   Natural-language agent detection.
+   This flag tells normal AI chat whether
+   the user message has already been displayed.
+*/
 
-   We send messages to the agent first so Avani
-   can understand normal human sentences.
+let agentMessageAlreadyAdded = false;
 
-   If the agent decides the message is NOT an
-   action, we continue into normal AI chat below.
+
+/*
+   Natural-language Agent detection.
+
+   Every message is checked silently by Avani.
+
+   If it is an action:
+       display message
+       execute action
+       stop
+
+   If it is NOT an action:
+       keep the already displayed message
+       continue to normal AI chat
 */
 
 const shouldTryAgent = true;
@@ -1267,15 +1281,28 @@ const shouldTryAgent = true;
 
 if (shouldTryAgent) {
 
-    if (isExactAgentCommand || finalMessage.trim().length > 2) {
+    if (
+        isExactAgentCommand ||
+        finalMessage.trim().length > 2
+    ) {
+
+        /*
+           Display the user's message immediately.
+
+           This keeps it visible while Avani
+           is thinking.
+        */
 
         addUserMessage(message);
+
+        agentMessageAlreadyAdded = true;
 
         messageInput.value = "";
 
         sendButton.disabled = true;
 
         showThinking();
+
 
         try {
 
@@ -1311,27 +1338,30 @@ if (shouldTryAgent) {
 
 
             /*
-               If Avani understood this as an action,
-               execute the action.
+               ACTION DETECTED
             */
 
             if (
-    data.success &&
-    data.action &&
-    data.action !== "not_an_action"
-) {
+                data.success &&
+                data.action &&
+                data.action !== "not_an_action"
+            ) {
 
                 removeThinking();
 
 
+                /*
+                   Website action
+                */
+
                 if (
-                    data.success &&
                     data.action === "open_website" &&
                     data.url
                 ) {
 
                     addAssistantMessage(
-                        data.response
+                        data.response ||
+                        "Opening website."
                     );
 
                     window.open(
@@ -1340,6 +1370,10 @@ if (shouldTryAgent) {
                     );
 
                 }
+
+                /*
+                   All other agent actions
+                */
 
                 else {
 
@@ -1360,27 +1394,17 @@ if (shouldTryAgent) {
 
 
             /*
-               Not an action.
+               NOT AN ACTION
 
-               Remove the temporary agent message
-               and continue with normal AI chat.
+               Do NOT remove the user message.
+
+               Do NOT add it again.
+
+               Normal AI chat below will continue
+               using the same already-visible message.
             */
 
             removeThinking();
-
-            const userMessages =
-                document.querySelectorAll(
-                    ".user-message"
-                );
-
-            const lastUserMessage =
-                userMessages[
-                    userMessages.length - 1
-                ];
-
-            if (lastUserMessage) {
-                lastUserMessage.remove();
-            }
 
         }
 
@@ -1393,32 +1417,33 @@ if (shouldTryAgent) {
                 error
             );
 
-            const userMessages =
-                document.querySelectorAll(
-                    ".user-message"
-                );
+            /*
+               If Agent Mode fails, continue
+               normally with AI chat.
+            */
 
-            const lastUserMessage =
-                userMessages[
-                    userMessages.length - 1
-                ];
-
-            if (lastUserMessage) {
-                lastUserMessage.remove();
-            }
         }
 
-        sendButton.disabled = false;
+        finally {
 
-        messageInput.focus();
+            sendButton.disabled = false;
+
+            messageInput.focus();
+
+        }
+
     }
+
 }
 
-    /* =====================================================
-       NORMAL AI CHAT
-    ===================================================== */
 
+/* =====================================================
+   NORMAL AI CHAT
+===================================================== */
+
+    if (!shouldTryAgent || !agentMessageAlreadyAdded) {
     addUserMessage(message);
+}
 
     messageInput.value = "";
 

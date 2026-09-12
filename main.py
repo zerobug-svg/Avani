@@ -15,6 +15,47 @@ from docx import Document
 
 
 # ============================================================
+# AI PROVIDER CONFIGURATION
+# ============================================================
+
+AI_PROVIDER = os.getenv(
+    "AVANI_AI_PROVIDER",
+    "ollama"
+).lower()
+
+OLLAMA_URL = os.getenv(
+    "OLLAMA_URL",
+    "http://127.0.0.1:11434/api/generate"
+)
+
+OLLAMA_MODEL = os.getenv(
+    "OLLAMA_MODEL",
+    "llama3.2:3b"
+)
+
+OLLAMA_VISION_MODEL = os.getenv(
+    "OLLAMA_VISION_MODEL",
+    "gemma3:4b"
+)
+
+GEMINI_API_KEY = os.getenv(
+    "GEMINI_API_KEY"
+)
+
+GEMINI_MODEL = os.getenv(
+    "GEMINI_MODEL",
+    "gemini-3.5-flash"
+)
+
+GEMINI_URL = (
+    "https://generativelanguage.googleapis.com/"
+    "v1beta/models/"
+    + GEMINI_MODEL
+    + ":generateContent"
+)
+
+
+# ============================================================
 # AVANI - PRASANNA'S PERSONAL AI ASSISTANT
 # ============================================================
 
@@ -29,11 +70,148 @@ app = FastAPI(
 # CONFIGURATION
 # ============================================================
 
-OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-MODEL = "llama3.2:3b"
-
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+# ============================================================
+# COMMON AI RESPONSE FUNCTION
+# ============================================================
 
+def generate_ai_response(
+    prompt: str,
+    model: str | None = None,
+    image_base64: str | None = None,
+    mime_type: str = "image/jpeg",
+    timeout: int = 180
+):
+    """
+    Generate an AI response using the configured provider.
+
+    Local:
+        AVANI_AI_PROVIDER=ollama
+
+    Cloud:
+        AVANI_AI_PROVIDER=gemini
+    """
+
+    # ========================================================
+    # GEMINI
+    # ========================================================
+
+    if AI_PROVIDER == "gemini":
+
+        if not GEMINI_API_KEY:
+            raise RuntimeError(
+                "GEMINI_API_KEY is not configured."
+            )
+
+        parts = [
+            {
+                "text": prompt
+            }
+        ]
+
+        # Add image when image intelligence is being used
+        if image_base64:
+            parts.append(
+                {
+                    "inline_data": {
+                        "mime_type": mime_type,
+                        "data": image_base64
+                    }
+                }
+            )
+
+        payload = {
+            "contents": [
+                {
+                    "parts": parts
+                }
+            ]
+        }
+
+        response = requests.post(
+            GEMINI_URL,
+            headers={
+                "x-goog-api-key": GEMINI_API_KEY,
+                "Content-Type": "application/json"
+            },
+            json=payload,
+            timeout=timeout
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        candidates = data.get("candidates", [])
+
+        if not candidates:
+            raise RuntimeError(
+                "Gemini returned no response."
+            )
+
+        content = candidates[0].get(
+            "content",
+            {}
+        )
+
+        response_parts = content.get(
+            "parts",
+            []
+        )
+
+        text = "".join(
+            part.get("text", "")
+            for part in response_parts
+        ).strip()
+
+        if not text:
+            raise RuntimeError(
+                "Gemini returned an empty response."
+            )
+
+        return text
+
+    # ========================================================
+    # OLLAMA
+    # ========================================================
+
+    payload = {
+        "model": model or OLLAMA_MODEL,
+        "prompt": prompt,
+        "stream": False
+    }
+
+    # Ollama vision model
+    if image_base64:
+        payload["model"] = (
+            model or OLLAMA_VISION_MODEL
+        )
+
+        payload["images"] = [
+            image_base64
+        ]
+
+    response = requests.post(
+        OLLAMA_URL,
+        json=payload,
+        timeout=timeout
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+
+    text = data.get(
+        "response",
+        ""
+    ).strip()
+
+    if not text:
+        raise RuntimeError(
+            "Ollama returned an empty response."
+        )
+
+    return text
 UPLOAD_FOLDER = "uploads"
 
 def search_web(query: str):
@@ -266,77 +444,40 @@ CONTENT:
         )
 
 
-        # -------------------------------------------------
-        # Send results to local Ollama
-        # -------------------------------------------------
-
-        ollama_response = requests.post(
-
-            OLLAMA_URL,
-
-            json={
-
-                "model":
-                    MODEL,
-
-                "prompt":
-                    web_prompt,
-
-                "stream":
-                    False
-
-            },
-
-            timeout=120
-        )
-
-
-        # -------------------------------------------------
-        # Check Ollama
+               # -------------------------------------------------
+        # Generate AI response
         # -------------------------------------------------
 
-        if not ollama_response.ok:
+        try:
+
+            response_text = generate_ai_response(
+                prompt=web_prompt,
+                model=OLLAMA_MODEL,
+                timeout=120
+            )
+
+        except Exception as error:
+
+            print(
+                "WEB AI RESPONSE ERROR:",
+                error
+            )
 
             return {
-
                 "success": False,
-
                 "response":
-                    "I found web results, but I couldn't process them with my local AI."
+                    "I found web results, but I couldn't generate an answer right now.",
+                "error":
+                    str(error)
             }
 
 
-        data = (
-            ollama_response.json()
-        )
-
-
-        response_text = (
-            data.get(
-                "response",
-                ""
-            )
-            .strip()
-        )
-
-
-        if not response_text:
-
-            response_text = (
-                "I found web results, but I couldn't generate an answer."
-            )
-
-
         return {
-
             "success": True,
-
             "response":
                 response_text,
-
             "sources":
                 results
-
         }
 
 
@@ -348,16 +489,13 @@ CONTENT:
         )
 
         return {
-
             "success": False,
-
             "response":
                 "I couldn't complete the web search right now.",
-
             "error":
                 str(error)
-
         }
+
 
 # ============================================================
 # CREATE UPLOAD FOLDER
@@ -367,8 +505,6 @@ os.makedirs(
     UPLOAD_FOLDER,
     exist_ok=True
 )
-
-
 # ============================================================
 # ALLOWED FILE TYPES
 # ============================================================
@@ -498,7 +634,6 @@ Do not invent facts.
 You are Avani, Prasanna's personal AI assistant.
 """
 
-
 # ============================================================
 # CHAT
 # ============================================================
@@ -518,24 +653,11 @@ Avani:
 
     try:
 
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": MODEL,
-                "prompt": prompt,
-                "stream": False
-            },
+        ai_response = generate_ai_response(
+            prompt=prompt,
+            model=OLLAMA_MODEL,
             timeout=120
         )
-
-        response.raise_for_status()
-
-        data = response.json()
-
-        ai_response = data.get(
-            "response",
-            ""
-        ).strip()
 
         if not ai_response:
 
@@ -549,7 +671,6 @@ Avani:
             "response": ai_response
         }
 
-
     except requests.exceptions.ConnectionError:
 
         return {
@@ -559,7 +680,6 @@ Avani:
                 "Please make sure Ollama is running."
             )
         }
-
 
     except requests.exceptions.Timeout:
 
@@ -571,17 +691,15 @@ Avani:
             )
         }
 
-
     except requests.exceptions.RequestException as error:
 
         return {
             "assistant": "Avani",
             "response": (
-                "I couldn't communicate with Ollama. "
+                "I couldn't communicate with the AI. "
                 f"Technical error: {str(error)}"
             )
         }
-
 
     except Exception as error:
 
@@ -594,6 +712,9 @@ Avani:
         }
 
 
+# ============================================================
+# FILE INTELLIGENCE
+# ============================================================
 # ============================================================
 # FILE INTELLIGENCE
 # FILE UPLOAD + PDF TEXT EXTRACTION
@@ -813,7 +934,7 @@ def health():
         "assistant": "Avani",
         "owner": "Prasanna",
         "ollama": ollama_status,
-        "model": MODEL
+       "model": OLLAMA_MODEL
     }
 
 
@@ -882,7 +1003,7 @@ async def chat_with_file(request: FileChatRequest):
         )[1].lower()
 
 
-        # =================================================
+                # =================================================
         # IMAGE INTELLIGENCE
         # =================================================
 
@@ -894,7 +1015,10 @@ async def chat_with_file(request: FileChatRequest):
 
             try:
 
+                # -------------------------------------------------
                 # Read image as binary data
+                # -------------------------------------------------
+
                 with open(
                     requested_path,
                     "rb"
@@ -905,7 +1029,10 @@ async def chat_with_file(request: FileChatRequest):
                     )
 
 
+                # -------------------------------------------------
                 # Convert image to Base64
+                # -------------------------------------------------
+
                 image_base64 = (
                     base64.b64encode(
                         image_bytes
@@ -948,60 +1075,25 @@ async def chat_with_file(request: FileChatRequest):
 
 
                 # -------------------------------------------------
-                # Send image to Gemma 3 Vision
+                # Generate image AI response
                 # -------------------------------------------------
 
-                ollama_response = requests.post(
-
-                    OLLAMA_URL,
-
-                    json={
-                        "model": "gemma3:4b",
-                        "prompt": image_prompt,
-                        "images": [
-                            image_base64
-                        ],
-                        "stream": False
-                    },
-
+                response_text = generate_ai_response(
+                    prompt=image_prompt,
+                    model=OLLAMA_VISION_MODEL,
+                    image_base64=image_base64,
+                    mime_type=(
+                        "image/png"
+                        if extension == ".png"
+                        else "image/jpeg"
+                    ),
                     timeout=180
                 )
 
 
                 # -------------------------------------------------
-                # Check Ollama response
+                # Return image response
                 # -------------------------------------------------
-
-                if not ollama_response.ok:
-
-                    return {
-                        "success": False,
-                        "response":
-                            "Gemma could not analyze the image."
-                    }
-
-
-                result = (
-                    ollama_response.json()
-                )
-
-
-                response_text = (
-                    result.get(
-                        "response",
-                        ""
-                    )
-                    .strip()
-                )
-
-
-                if not response_text:
-
-                    response_text = (
-                        "I couldn't generate an answer "
-                        "from the image."
-                    )
-
 
                 return {
 
@@ -1036,8 +1128,7 @@ async def chat_with_file(request: FileChatRequest):
                         str(error)
 
                 }
-
-
+ 
         # =================================================
         # DOCUMENT INTELLIGENCE
         # =================================================

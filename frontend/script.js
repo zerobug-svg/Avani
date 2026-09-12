@@ -1137,9 +1137,8 @@ if (webSearchQuery) {
 ===================================================== */
 
 const agentPatterns = [
-    /^open (google|youtube|github|linkedin)$/i,
-    /^go to (google|youtube|github|linkedin)$/i,
-    /^open (google|youtube|github|linkedin) website$/i,
+    /^open .+/i,
+    /^go to .+/i,
     /^calculate .+/i,
     /^what is .+/i
 ];

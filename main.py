@@ -1337,7 +1337,7 @@ async def agent_action(request: AgentRequest):
         }
 
 
-    # --------------------------------------------------------
+        # --------------------------------------------------------
     # OPEN WEBSITE
     # --------------------------------------------------------
 
@@ -1345,7 +1345,15 @@ async def agent_action(request: AgentRequest):
         "google": "https://www.google.com",
         "youtube": "https://www.youtube.com",
         "github": "https://github.com",
-        "linkedin": "https://www.linkedin.com"
+        "linkedin": "https://www.linkedin.com",
+        "instagram": "https://www.instagram.com",
+        "facebook": "https://www.facebook.com",
+        "amazon": "https://www.amazon.com",
+        "netflix": "https://www.netflix.com",
+        "stackoverflow": "https://stackoverflow.com",
+        "reddit": "https://www.reddit.com",
+        "twitter": "https://x.com",
+        "x": "https://x.com"
     }
 
 
@@ -1365,6 +1373,44 @@ async def agent_action(request: AgentRequest):
                 "response": f"Opening {name}."
             }
 
+
+    # --------------------------------------------------------
+    # OPEN ANY WEBSITE
+    # --------------------------------------------------------
+
+    website_command = None
+
+    if command.startswith("open "):
+        website_command = command[5:].strip()
+
+    elif command.startswith("go to "):
+        website_command = command[6:].strip()
+
+
+    if website_command:
+
+        website_command = website_command.replace(
+            " website",
+            ""
+        ).strip()
+
+
+        if (
+            "." in website_command
+            and " " not in website_command
+        ):
+
+            url = website_command
+
+            if not url.startswith("http://") and not url.startswith("https://"):
+                url = "https://" + url
+
+            return {
+                "success": True,
+                "action": "open_website",
+                "url": url,
+                "response": f"Opening {website_command}."
+            }
 
     # --------------------------------------------------------
     # CALCULATOR

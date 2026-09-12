@@ -1316,3 +1316,161 @@ async def chat_with_file(request: FileChatRequest):
             "error":
                 str(error)
         }
+
+# ============================================================
+# AVANI AGENT ACTIONS
+# ============================================================
+
+class AgentRequest(BaseModel):
+    command: str
+
+
+@app.post("/agent")
+async def agent_action(request: AgentRequest):
+
+    command = request.command.strip().lower()
+
+    if not command:
+        return {
+            "success": False,
+            "response": "Please tell me what you want me to do."
+        }
+
+
+    # --------------------------------------------------------
+    # OPEN WEBSITE
+    # --------------------------------------------------------
+
+    website_map = {
+        "google": "https://www.google.com",
+        "youtube": "https://www.youtube.com",
+        "github": "https://github.com",
+        "linkedin": "https://www.linkedin.com"
+    }
+
+
+    for name, url in website_map.items():
+
+        if (
+            command == f"open {name}"
+            or command == f"open {name}.com"
+            or command == f"go to {name}"
+            or command == f"open {name} website"
+        ):
+
+            return {
+                "success": True,
+                "action": "open_website",
+                "url": url,
+                "response": f"Opening {name}."
+            }
+
+
+    # --------------------------------------------------------
+    # CALCULATOR
+    # --------------------------------------------------------
+
+    if (
+        command.startswith("calculate ")
+        or command.startswith("what is ")
+    ):
+
+        expression = command
+
+        expression = expression.replace(
+            "calculate ",
+            "",
+            1
+        )
+
+        expression = expression.replace(
+            "what is ",
+            "",
+            1
+        )
+
+        expression = expression.replace(
+            "×",
+            "*"
+        )
+
+        expression = expression.replace(
+            "÷",
+            "/"
+        )
+
+        allowed_characters = (
+            "0123456789+-*/().% "
+        )
+
+        if all(
+            character in allowed_characters
+            for character in expression
+        ):
+
+            try:
+
+                result = eval(
+                    expression,
+                    {
+                        "__builtins__": {}
+                    },
+                    {}
+                )
+
+                return {
+                    "success": True,
+                    "action": "calculate",
+                    "result": result,
+                    "response":
+                        f"The answer is {result}."
+                }
+
+            except Exception:
+                pass
+
+
+    # --------------------------------------------------------
+    # AI FALLBACK
+    # --------------------------------------------------------
+
+    try:
+
+        prompt = f"""
+{SYSTEM_PROMPT}
+
+You are handling an agent command.
+
+USER COMMAND:
+{request.command}
+
+Determine the best action or response.
+
+If the request requires an action that Avani
+cannot currently perform, clearly explain that.
+
+Do not pretend that an action was completed
+unless the backend actually completed it.
+"""
+
+        response_text = generate_ai_response(
+            prompt=prompt,
+            model=OLLAMA_MODEL,
+            timeout=120
+        )
+
+        return {
+            "success": True,
+            "action": "ai_response",
+            "response": response_text
+        }
+
+
+    except Exception as error:
+
+        return {
+            "success": False,
+            "response":
+                "I couldn't process that command right now.",
+            "error": str(error)
+        }    

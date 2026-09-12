@@ -1132,7 +1132,118 @@ if (webSearchQuery) {
 
     return;
 }
+/* =====================================================
+   AGENT ACTIONS
+===================================================== */
 
+const agentPatterns = [
+    /^open (google|youtube|github|linkedin)$/i,
+    /^go to (google|youtube|github|linkedin)$/i,
+    /^open (google|youtube|github|linkedin) website$/i,
+    /^calculate .+/i,
+    /^what is .+/i
+];
+
+const isAgentCommand =
+    agentPatterns.some(pattern =>
+        pattern.test(finalMessage.trim())
+    );
+
+if (isAgentCommand) {
+
+    addUserMessage(message);
+
+    messageInput.value = "";
+
+    sendButton.disabled = true;
+
+    showThinking();
+
+    try {
+
+        const response =
+            await fetch(
+                "/agent",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        command: finalMessage
+                    })
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Agent backend connection failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        removeThinking();
+
+
+        if (
+            data.success &&
+            data.action === "open_website" &&
+            data.url
+        ) {
+
+            addAssistantMessage(
+                data.response
+            );
+
+            window.open(
+                data.url,
+                "_blank"
+            );
+
+        }
+
+        else {
+
+            addAssistantMessage(
+                data.response ||
+                "Agent action completed."
+            );
+
+        }
+
+
+    } catch (error) {
+
+        removeThinking();
+
+        addAssistantMessage(
+            "I couldn't complete that agent action right now."
+        );
+
+        console.error(
+            "AGENT ERROR:",
+            error
+        );
+
+    }
+
+
+    sendButton.disabled = false;
+
+    messageInput.focus();
+
+    return;
+}
 
 /* =====================================================
    NORMAL AI CHAT

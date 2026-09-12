@@ -1542,6 +1542,72 @@ async def agent_action(request: AgentRequest):
                             f"I couldn't open your {folder_name}.",
                         "error": str(error)
                     }         
+        # --------------------------------------------------------
+    # WINDOWS SYSTEM ACTIONS
+    # --------------------------------------------------------
+
+    system_action_map = {
+
+        "task manager": [
+            "taskmgr.exe"
+        ],
+
+        "settings": [
+            "start",
+            "ms-settings:"
+        ],
+
+        "control panel": [
+            "control.exe"
+        ],
+
+        "bluetooth settings": [
+            "start",
+            "ms-settings:bluetooth"
+        ],
+
+        "wifi settings": [
+            "start",
+            "ms-settings:network-wifi"
+        ],
+
+        "network settings": [
+            "start",
+            "ms-settings:network"
+        ]
+    }
+
+
+    if command.startswith("open "):
+
+        system_name = command[5:].strip()
+
+
+        if system_name in system_action_map:
+
+            try:
+
+                subprocess.Popen(
+                    system_action_map[system_name],
+                    shell=True
+                )
+
+                return {
+                    "success": True,
+                    "action": "system_action",
+                    "target": system_name,
+                    "response":
+                        f"Opening {system_name}."
+                }
+
+            except Exception as error:
+
+                return {
+                    "success": False,
+                    "response":
+                        f"I couldn't open {system_name}.",
+                    "error": str(error)
+                }            
     # --------------------------------------------------------
     # CALCULATOR
     # --------------------------------------------------------

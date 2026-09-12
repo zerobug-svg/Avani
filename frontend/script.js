@@ -3778,6 +3778,290 @@ function setReminder() {
 
 
 /* =========================================================
+   AVANI COLOR THEMES
+   DESIGN / LAYOUT / SIZING ARE NOT CHANGED
+========================================================= */
+
+const AVANI_THEMES = {
+   default: {
+    name: "Original Avani",
+    primary: "#3e7cff",
+    secondary: "#5d8dff",
+    glow: "rgba(62, 124, 255, 0.55)",
+    soft: "rgba(62, 124, 255, 0.16)"
+},
+
+    purple: {
+        name: "Royal Purple",
+        primary: "#a855f7",
+        secondary: "#7c3aed",
+        glow: "rgba(168, 85, 247, 0.55)",
+        soft: "rgba(168, 85, 247, 0.16)"
+    },
+
+    emerald: {
+        name: "Emerald",
+        primary: "#10b981",
+        secondary: "#059669",
+        glow: "rgba(16, 185, 129, 0.55)",
+        soft: "rgba(16, 185, 129, 0.16)"
+    },
+
+    orange: {
+        name: "Amber Orange",
+        primary: "#f59e0b",
+        secondary: "#d97706",
+        glow: "rgba(245, 158, 11, 0.55)",
+        soft: "rgba(245, 158, 11, 0.16)"
+    },
+
+    crimson: {
+        name: "Crimson",
+        primary: "#ef4444",
+        secondary: "#dc2626",
+        glow: "rgba(239, 68, 68, 0.55)",
+        soft: "rgba(239, 68, 68, 0.16)"
+    },
+
+    pink: {
+        name: "Pink",
+        primary: "#ec4899",
+        secondary: "#db2777",
+        glow: "rgba(236, 72, 153, 0.55)",
+        soft: "rgba(236, 72, 153, 0.16)"
+    }
+};
+
+
+function installAvaniThemeStyles() {
+
+    if (document.getElementById("avaniThemeStyles")) {
+        return;
+    }
+
+    const style = document.createElement("style");
+
+    style.id = "avaniThemeStyles";
+
+    style.textContent = `
+        :root {
+            --avani-theme-primary: #6f8cff;
+            --avani-theme-secondary: #4c82e0;
+            --avani-theme-glow: rgba(111, 140, 255, 0.55);
+            --avani-theme-soft: rgba(111, 140, 255, 0.16);
+        }
+
+        body.avani-theme-active .sidebar-glow,
+        body.avani-theme-active .quote-glow,
+        body.avani-theme-active .hero-card,
+        body.avani-theme-active .avani-focus-button,
+        body.avani-theme-active .hero-status span,
+        body.avani-theme-active .send-button,
+        body.avani-theme-active .nav-item.active,
+        body.avani-theme-active .online-status,
+        body.avani-theme-active .avani-image-glow-frame,
+        body.avani-theme-active .avani-image-border,
+        body.avani-theme-active .avani-title-dot,
+        body.avani-theme-active .avani-title-status {
+            border-color: var(--avani-theme-primary) !important;
+            box-shadow: 0 0 18px var(--avani-theme-glow) !important;
+        }
+
+        body.avani-theme-active .brand-logo,
+        body.avani-theme-active .hero-content h1 span,
+        body.avani-theme-active .hero-status,
+        body.avani-theme-active .online-status,
+        body.avani-theme-active .avani-panel h2,
+        body.avani-theme-active .avani-full-image-title {
+            color: var(--avani-theme-primary) !important;
+        }
+
+        body.avani-theme-active .nav-item.active,
+        body.avani-theme-active .send-button,
+        body.avani-theme-active .avani-focus-button {
+            background: var(--avani-theme-soft) !important;
+        }
+
+        body.avani-theme-active .panel-button:hover,
+        body.avani-theme-active .suggestions button:hover,
+        body.avani-theme-active .tools-grid button:hover,
+        body.avani-theme-active .quick-actions button:hover,
+        body.avani-theme-active .add-task:hover {
+            border-color: var(--avani-theme-primary) !important;
+            color: var(--avani-theme-primary) !important;
+            box-shadow: 0 0 14px var(--avani-theme-glow) !important;
+        }
+
+        body.avani-theme-active .input-box:focus-within,
+        body.avani-theme-active .chat-card:focus-within {
+            border-color: var(--avani-theme-primary) !important;
+            box-shadow: 0 0 16px var(--avani-theme-glow) !important;
+        }
+
+        body.avani-theme-active .bubble.assistant {
+            border-color: var(--avani-theme-secondary) !important;
+        }
+
+        body.avani-theme-active .right-card,
+        body.avani-theme-active .right-quote,
+        body.avani-theme-active .avani-panel {
+            border-color: var(--avani-theme-soft) !important;
+        }
+
+        body.avani-theme-active input[type="checkbox"] {
+            accent-color: var(--avani-theme-primary) !important;
+        }
+
+        body.avani-theme-active .avani-image-glow-frame {
+            box-shadow:
+                0 0 12px var(--avani-theme-glow),
+                0 0 30px var(--avani-theme-glow),
+                0 0 60px var(--avani-theme-soft) !important;
+        }
+
+        body.avani-theme-active .avani-image-border {
+            box-shadow:
+                inset 0 0 18px var(--avani-theme-soft),
+                0 0 18px var(--avani-theme-glow) !important;
+        }
+
+        body.avani-theme-active .sidebar-footer .footer-dot {
+            background: var(--avani-theme-primary) !important;
+            box-shadow: 0 0 10px var(--avani-theme-glow) !important;
+        }
+    `;
+
+    document.head.appendChild(style);
+}
+
+
+function applyAvaniTheme(themeName) {
+
+    if (!AVANI_THEMES[themeName]) {
+        themeName = "default";
+    }
+
+    const theme = AVANI_THEMES[themeName];
+
+    /*
+       DEFAULT = ORIGINAL AVANI DESIGN
+       Do NOT apply any theme CSS.
+    */
+
+    document.body.classList.remove("avani-theme-active");
+
+    document.body.setAttribute(
+        "data-avani-theme",
+        themeName
+    );
+
+    localStorage.setItem(
+        "avani_theme",
+        themeName
+    );
+
+    /*
+       Only custom themes get the theme overrides.
+    */
+
+    if (themeName !== "default") {
+
+        document.documentElement.style.setProperty(
+            "--avani-theme-primary",
+            theme.primary
+        );
+
+        document.documentElement.style.setProperty(
+            "--avani-theme-secondary",
+            theme.secondary
+        );
+
+        document.documentElement.style.setProperty(
+            "--avani-theme-glow",
+            theme.glow
+        );
+
+        document.documentElement.style.setProperty(
+            "--avani-theme-soft",
+            theme.soft
+        );
+
+        document.body.classList.add(
+            "avani-theme-active"
+        );
+    }
+}
+
+
+function initializeAvaniTheme() {
+
+    installAvaniThemeStyles();
+
+    const savedTheme =
+        localStorage.getItem("avani_theme") || "default";
+
+    applyAvaniTheme(savedTheme);
+}
+
+
+function selectAvaniTheme(themeName) {
+
+    applyAvaniTheme(themeName);
+
+    openSettingsPanel();
+}
+
+
+function avaniThemeButton(themeKey) {
+
+    const theme = AVANI_THEMES[themeKey];
+
+    const savedTheme =
+        localStorage.getItem("avani_theme") || "default";
+
+    const selected =
+        savedTheme === themeKey;
+
+    return `
+        <button
+            type="button"
+            class="panel-button"
+            onclick="selectAvaniTheme('${themeKey}')"
+            style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+                box-sizing: border-box;
+                border-color: ${selected ? theme.primary : ""};
+                box-shadow: ${selected ? `0 0 12px ${theme.glow}` : ""};
+            "
+        >
+            <span
+                style="
+                    width: 16px;
+                    height: 16px;
+                    min-width: 16px;
+                    border-radius: 50%;
+                    display: inline-block;
+                    background: ${theme.primary};
+                    box-shadow: 0 0 10px ${theme.glow};
+                "
+            ></span>
+
+            <span>
+                ${theme.name}
+            </span>
+
+            <span style="margin-left:auto;">
+                ${selected ? "✓" : ""}
+            </span>
+        </button>
+    `;
+}
+
+
+/* =========================================================
    SETTINGS
 ========================================================= */
 
@@ -3828,6 +4112,36 @@ function openSettingsPanel() {
             <p>
                 Browser Local Storage
             </p>
+
+            <br>
+
+            <p>
+                <strong>
+                    Website Color
+                </strong>
+            </p>
+
+            <p>
+                Choose Avani's accent and glow color.
+            </p>
+
+            <div
+                style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin-top: 10px;
+                "
+            >
+                ${avaniThemeButton("default")}
+                ${avaniThemeButton("purple")}
+                ${avaniThemeButton("emerald")}
+                ${avaniThemeButton("orange")}
+                ${avaniThemeButton("crimson")}
+                ${avaniThemeButton("pink")}
+            </div>
+
+            <br>
 
             <button
                 class="panel-button"
@@ -5220,5 +5534,22 @@ function avaniFullImageEscape(
         closeAvaniFullImage();
 
     }
+
+}
+/* =========================================================
+   INITIALIZE AVANI COLOR THEME
+========================================================= */
+
+if (document.readyState === "loading") {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializeAvaniTheme,
+        { once: true }
+    );
+
+} else {
+
+    initializeAvaniTheme();
 
 }

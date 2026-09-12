@@ -1761,6 +1761,121 @@ async def agent_action(request: AgentRequest):
                     "I couldn't control the volume.",
                 "error": str(error)
             }
+        # --------------------------------------------------------
+    # WINDOWS BRIGHTNESS CONTROL
+    # --------------------------------------------------------
+
+    brightness_actions = {
+        "increase brightness": 1,
+        "brightness up": 1,
+        "make screen brighter": 1,
+
+        "decrease brightness": -1,
+        "brightness down": -1,
+        "make screen darker": -1
+    }
+
+
+    # --------------------------------------------------------
+    # SET EXACT BRIGHTNESS
+    # --------------------------------------------------------
+
+    brightness_match = re.match(
+        r"^(?:set |make )?brightness(?: to)?\s+(\d{1,3})%?$",
+        command
+    )
+
+
+    if brightness_match:
+
+        try:
+
+            brightness_percent = int(
+                brightness_match.group(1)
+            )
+
+            brightness_percent = max(
+                0,
+                min(100, brightness_percent)
+            )
+
+
+            import screen_brightness_control as sbc
+
+            sbc.set_brightness(
+                brightness_percent
+            )
+
+
+            return {
+                "success": True,
+                "action": "set_brightness",
+                "brightness": brightness_percent,
+                "response":
+                    f"Brightness set to {brightness_percent}%."
+            }
+
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't set the screen brightness.",
+                "error": str(error)
+            }
+
+
+    # --------------------------------------------------------
+    # BRIGHTNESS UP / DOWN
+    # --------------------------------------------------------
+
+    if command in brightness_actions:
+
+        try:
+
+            import screen_brightness_control as sbc
+
+            current = sbc.get_brightness(
+                display=0
+            )
+
+            if isinstance(current, list):
+                current = current[0]
+
+            change = brightness_actions[command]
+
+            new_brightness = max(
+                0,
+                min(100, current + (10 * change))
+            )
+
+            sbc.set_brightness(
+                new_brightness
+            )
+
+
+            return {
+                "success": True,
+                "action": "brightness_control",
+                "brightness": new_brightness,
+                "response": (
+                    f"Brightness increased to {new_brightness}%."
+                    if change == 1
+                    else
+                    f"Brightness decreased to {new_brightness}%."
+                )
+            }
+
+
+        except Exception as error:
+
+            return {
+                "success": False,
+                "response":
+                    "I couldn't control the screen brightness.",
+                "error": str(error)
+            }
                        
     # --------------------------------------------------------
     # CALCULATOR

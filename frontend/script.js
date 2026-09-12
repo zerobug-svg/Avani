@@ -1137,36 +1137,47 @@ if (webSearchQuery) {
 ===================================================== */
 
 const agentPatterns = [
-    /^open .+/i,
-    /^go to .+/i,
-    /^calculate .+/i,
-    /^what is .+/i,
+    new RegExp("^open .+$", "i"),
+    new RegExp("^go to .+$", "i"),
+    new RegExp("^calculate .+$", "i"),
+    new RegExp("^what is .+$", "i"),
 
-    /^increase volume$/i,
-    /^turn up volume$/i,
-    /^volume up$/i,
-    /^make volume louder$/i,
-    /^make it louder$/i,
-    /^louder$/i,
+    new RegExp("^increase volume$", "i"),
+    new RegExp("^turn up volume$", "i"),
+    new RegExp("^volume up$", "i"),
+    new RegExp("^make volume louder$", "i"),
+    new RegExp("^make it louder$", "i"),
+    new RegExp("^louder$", "i"),
 
-    /^decrease volume$/i,
-    /^turn down volume$/i,
-    /^volume down$/i,
-    /^lower the volume$/i,
-    /^make volume quieter$/i,
-    /^make it quieter$/i,
-    /^quieter$/i,
+    new RegExp("^decrease volume$", "i"),
+    new RegExp("^turn down volume$", "i"),
+    new RegExp("^volume down$", "i"),
+    new RegExp("^lower the volume$", "i"),
+    new RegExp("^make volume quieter$", "i"),
+    new RegExp("^make it quieter$", "i"),
+    new RegExp("^quieter$", "i"),
 
-    /^mute$/i,
-    /^mute volume$/i,
-    /^mute my laptop$/i,
+    new RegExp("^mute$", "i"),
+    new RegExp("^mute volume$", "i"),
+    new RegExp("^mute my laptop$", "i"),
 
-    /^unmute$/i,
-    /^unmute volume$/i,
-    /^unmute my laptop$/i,
+    new RegExp("^unmute$", "i"),
+    new RegExp("^unmute volume$", "i"),
+    new RegExp("^unmute my laptop$", "i"),
 
-    /^(set )?volume(?: to)? \d{1,3}%?$/i,
-    /^make volume \d{1,3}%?$/i
+    new RegExp("^(set )?volume(?: to)? [0-9]{1,3}%?$", "i"),
+    new RegExp("^make volume [0-9]{1,3}%?$", "i"),
+
+    new RegExp("^increase brightness$", "i"),
+    new RegExp("^brightness up$", "i"),
+    new RegExp("^make screen brighter$", "i"),
+
+    new RegExp("^decrease brightness$", "i"),
+    new RegExp("^brightness down$", "i"),
+    new RegExp("^make screen darker$", "i"),
+
+    new RegExp("^(set )?brightness(?: to)? [0-9]{1,3}%?$", "i"),
+    new RegExp("^make brightness [0-9]{1,3}%?$", "i")
 ];
 const isAgentCommand =
     agentPatterns.some(pattern =>

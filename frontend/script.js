@@ -1142,7 +1142,6 @@ const agentPatterns = [
     /^calculate .+/i,
     /^what is .+/i
 ];
-
 const isAgentCommand =
     agentPatterns.some(pattern =>
         pattern.test(finalMessage.trim())

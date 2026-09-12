@@ -1411,7 +1411,56 @@ async def agent_action(request: AgentRequest):
                 "url": url,
                 "response": f"Opening {website_command}."
             }
+        # --------------------------------------------------------
+    # OPEN WINDOWS APPLICATIONS
+    # --------------------------------------------------------
 
+    import subprocess
+
+
+    app_map = {
+        "calculator": "calc.exe",
+        "calc": "calc.exe",
+        "notepad": "notepad.exe",
+        "command prompt": "cmd.exe",
+        "cmd": "cmd.exe",
+        "file explorer": "explorer.exe",
+        "explorer": "explorer.exe",
+        "paint": "mspaint.exe",
+        "powershell": "powershell.exe"
+    }
+
+
+    if command.startswith("open "):
+
+        app_name = command[5:].strip()
+
+
+        if app_name in app_map:
+
+            try:
+
+                subprocess.Popen(
+                    app_map[app_name],
+                    shell=True
+                )
+
+                return {
+                    "success": True,
+                    "action": "open_application",
+                    "application": app_name,
+                    "response":
+                        f"Opening {app_name}."
+                }
+
+            except Exception as error:
+
+                return {
+                    "success": False,
+                    "response":
+                        f"I couldn't open {app_name}.",
+                    "error": str(error)
+                }
     # --------------------------------------------------------
     # CALCULATOR
     # --------------------------------------------------------

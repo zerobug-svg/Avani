@@ -1132,7 +1132,7 @@ async function sendMessage() {
 
         return;
     }
-   /* =====================================================
+  /* =====================================================
    AGENT ACTIONS
 ===================================================== */
 
@@ -1140,7 +1140,6 @@ const exactAgentPatterns = [
     /^open .+/i,
     /^go to .+/i,
     /^calculate .+/i,
-    /^what is .+/i,
 
     /^increase volume$/i,
     /^turn up volume$/i,
@@ -1178,8 +1177,6 @@ const exactAgentPatterns = [
     /^(set )?brightness(?: to)? [0-9]{1,3}%?$/i,
     /^make brightness [0-9]{1,3}%?$/i,
     /^brightness [0-9]{1,3}%?$/i,
-    /^lets do brightness [0-9]{1,3}%?$/i,
-    /^let's do brightness [0-9]{1,3}%?$/i,
 
     /^turn wifi on$/i,
     /^turn wi-fi on$/i,
@@ -1247,190 +1244,244 @@ const exactAgentPatterns = [
 ];
 
 
+/* =====================================================
+   NATURAL AGENT INTENT
+===================================================== */
+
+const naturalAgentPatterns = [
+
+    /* Website / application */
+
+    /\b(open|launch|start|go to|visit)\b.*\b(youtube|google|gmail|github|facebook|instagram|spotify|camera|browser)\b/i,
+
+    /\b(can you|could you|please|would you|will you)\b.*\b(open|launch|start|visit|go to)\b/i,
+
+
+    /* Brightness */
+
+    /\b(brightness|screen)\b.*\b(brighter|brighter|darker|dark|dim|increase|decrease|raise|lower|turn up|turn down)\b/i,
+
+    /\b(make|set|change|increase|decrease|raise|lower|turn up|turn down)\b.*\b(brightness|screen)\b/i,
+
+
+    /* Volume */
+
+    /\b(volume|sound)\b.*\b(louder|quieter|lower|higher|increase|decrease|raise|reduce|turn up|turn down|mute|unmute)\b/i,
+
+    /\b(make|set|change|increase|decrease|raise|lower|turn up|turn down)\b.*\b(volume|sound)\b/i,
+
+
+    /* Wi-Fi */
+
+    /\b(wifi|wi-fi)\b.*\b(on|off|enable|disable|turn)\b/i,
+
+    /\b(turn|switch|enable|disable)\b.*\b(wifi|wi-fi)\b/i,
+
+
+    /* Media */
+
+    /\b(play|pause|resume|next|previous|skip)\b.*\b(music|song|track|media)?\b/i,
+
+
+    /* Screenshot */
+
+    /\b(take|capture)\b.*\b(screenshot|screen)\b/i,
+
+    /\b(screenshot|screen capture)\b/i,
+
+
+    /* Lock */
+
+    /\b(lock)\b.*\b(laptop|computer|screen)\b/i,
+
+
+    /* Restart / shutdown */
+
+    /\b(restart|reboot|shutdown|shut down)\b.*\b(laptop|computer|pc|system)\b/i
+
+];
+
+
 const isExactAgentCommand =
-    exactAgentPatterns.some(pattern =>
-        pattern.test(finalMessage.trim())
+    exactAgentPatterns.some(
+        pattern =>
+            pattern.test(
+                finalMessage.trim()
+            )
+    );
+
+
+const isNaturalAgentCommand =
+    naturalAgentPatterns.some(
+        pattern =>
+            pattern.test(
+                finalMessage.trim()
+            )
     );
 
 
 /*
-   This flag tells normal AI chat whether
-   the user message has already been displayed.
+   IMPORTANT:
+
+   Only action-looking messages go to Agent Mode.
+
+   Normal conversation goes directly
+   to normal AI chat.
+
+   This prevents unnecessary Gemini
+   requests and prevents 429 errors.
 */
+
+const shouldTryAgent =
+    isExactAgentCommand ||
+    isNaturalAgentCommand;
+
 
 let agentMessageAlreadyAdded = false;
 
 
-/*
-   Natural-language Agent detection.
-
-   Every message is checked silently by Avani.
-
-   If it is an action:
-       display message
-       execute action
-       stop
-
-   If it is NOT an action:
-       keep the already displayed message
-       continue to normal AI chat
-*/
-
-const shouldTryAgent = true;
-
-
 if (shouldTryAgent) {
 
-    if (
-        isExactAgentCommand ||
-        finalMessage.trim().length > 2
-    ) {
+    /*
+       Show the user's message immediately.
+    */
+
+    addUserMessage(message);
+
+    agentMessageAlreadyAdded = true;
+
+    messageInput.value = "";
+
+    sendButton.disabled = true;
+
+    showThinking();
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/agent",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        command: finalMessage
+                    })
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Agent backend connection failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
 
         /*
-           Display the user's message immediately.
-
-           This keeps it visible while Avani
-           is thinking.
+           ACTION DETECTED
         */
 
-        addUserMessage(message);
+        if (
+            data.success &&
+            data.action &&
+            data.action !== "not_an_action"
+        ) {
 
-        agentMessageAlreadyAdded = true;
-
-        messageInput.value = "";
-
-        sendButton.disabled = true;
-
-        showThinking();
-
-
-        try {
-
-            const response =
-                await fetch(
-                    "/agent",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-                            command: finalMessage
-                        })
-                    }
-                );
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    "Agent backend connection failed"
-                );
-
-            }
-
-
-            const data =
-                await response.json();
+            removeThinking();
 
 
             /*
-               ACTION DETECTED
+               Website action
             */
 
             if (
-                data.success &&
-                data.action &&
-                data.action !== "not_an_action"
+                data.action === "open_website" &&
+                data.url
             ) {
 
-                removeThinking();
+                addAssistantMessage(
+                    data.response ||
+                    "Opening website."
+                );
 
 
-                /*
-                   Website action
-                */
+                window.open(
+                    data.url,
+                    "_blank"
+                );
 
-                if (
-                    data.action === "open_website" &&
-                    data.url
-                ) {
+            }
 
-                    addAssistantMessage(
-                        data.response ||
-                        "Opening website."
-                    );
+            /*
+               Other actions
+            */
 
-                    window.open(
-                        data.url,
-                        "_blank"
-                    );
+            else {
 
-                }
+                addAssistantMessage(
+                    data.response ||
+                    "Agent action completed."
+                );
 
-                /*
-                   All other agent actions
-                */
-
-                else {
-
-                    addAssistantMessage(
-                        data.response ||
-                        "Agent action completed."
-                    );
-
-                }
-
-
-                sendButton.disabled = false;
-
-                messageInput.focus();
-
-                return;
             }
 
 
-            /*
-               NOT AN ACTION
-
-               Do NOT remove the user message.
-
-               Do NOT add it again.
-
-               Normal AI chat below will continue
-               using the same already-visible message.
-            */
-
-            removeThinking();
-
-        }
-
-        catch (error) {
-
-            removeThinking();
-
-            console.error(
-                "AGENT UNDERSTANDING ERROR:",
-                error
-            );
-
-            /*
-               If Agent Mode fails, continue
-               normally with AI chat.
-            */
-
-        }
-
-        finally {
-
-            sendButton.disabled = false;
+            sendButton.disabled =
+                false;
 
             messageInput.focus();
 
+            return;
         }
+
+
+        /*
+           Agent decided this was not
+           actually an action.
+
+           Keep the user's message visible
+           and continue to normal AI chat.
+        */
+
+        removeThinking();
+
+    }
+
+    catch (error) {
+
+        removeThinking();
+
+        console.error(
+            "AGENT UNDERSTANDING ERROR:",
+            error
+        );
+
+        /*
+           Continue to normal AI chat
+           if Agent Mode fails.
+        */
+
+    }
+
+    finally {
+
+        sendButton.disabled =
+            false;
+
+        messageInput.focus();
 
     }
 
@@ -1440,8 +1491,7 @@ if (shouldTryAgent) {
 /* =====================================================
    NORMAL AI CHAT
 ===================================================== */
-
-    if (!shouldTryAgent || !agentMessageAlreadyAdded) {
+if (!agentMessageAlreadyAdded) {
     addUserMessage(message);
 }
 

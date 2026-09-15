@@ -6042,3 +6042,526 @@ body.avani-full-image-open {
     }
 
 }
+/* =========================================================
+   AVANI MOBILE EXPERIENCE
+   Desktop design remains unchanged
+========================================================= */
+
+@media (max-width: 600px) {
+
+    html,
+    body {
+        width: 100%;
+        min-width: 0;
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    body {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    .dashboard {
+        width: 100%;
+        min-width: 0;
+        min-height: 100vh;
+        height: auto;
+        display: block;
+    }
+
+    /* -------------------------
+       MOBILE SIDEBAR
+    ------------------------- */
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        min-height: auto;
+        padding: 10px;
+        border-right: none;
+        border-bottom: 1px solid rgba(72, 123, 224, .25);
+    }
+
+    .brand {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 9px 10px;
+    }
+
+    .brand-logo-wrap {
+        width: 38px;
+        height: 38px;
+    }
+
+    .brand-logo {
+        font-size: 24px;
+    }
+
+    .brand-text h2 {
+        font-size: 14px;
+    }
+
+    .brand-text p {
+        font-size: 8px;
+    }
+
+    .side-nav {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        gap: 7px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 3px;
+        scrollbar-width: none;
+    }
+
+    .side-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-item {
+        width: auto;
+        min-width: 92px;
+        height: 46px;
+        flex: 0 0 auto;
+        padding: 0 10px;
+        gap: 7px;
+        border-radius: 11px;
+        font-size: 11px;
+    }
+
+    .nav-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .nav-arrow {
+        display: none;
+    }
+
+    .sidebar-quote,
+    .sidebar-footer {
+        display: none;
+    }
+
+    /* -------------------------
+       MAIN
+    ------------------------- */
+
+    .main {
+        width: 100%;
+        height: auto;
+        min-width: 0;
+        padding: 0 8px 8px;
+    }
+
+    /* -------------------------
+       TOPBAR
+    ------------------------- */
+
+    .topbar {
+        width: 100%;
+        height: 58px;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 0 10px;
+        border-radius: 0 0 13px 13px;
+    }
+
+    .greeting {
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .sun {
+        font-size: 23px;
+    }
+
+    .greeting h2 {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .greeting p {
+        font-size: 9px;
+    }
+
+    .top-quote {
+        display: none;
+    }
+
+    .profile {
+        gap: 7px;
+    }
+
+    .notification {
+        font-size: 18px;
+    }
+
+    .profile-circle {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    .profile > span:not(.notification) {
+        display: none;
+    }
+
+    /* -------------------------
+       CONTENT
+    ------------------------- */
+
+    .content-grid {
+        width: 100%;
+        min-width: 0;
+        display: block;
+        padding-top: 8px;
+    }
+
+    .center {
+        width: 100%;
+        min-width: 0;
+        gap: 8px;
+    }
+
+    /* -------------------------
+       HERO
+    ------------------------- */
+
+    .hero-card {
+        width: 100%;
+        height: 250px;
+        border-radius: 14px;
+    }
+
+    .hero-image {
+        object-position: center 42%;
+    }
+
+    .hero-content {
+        bottom: 15px;
+        padding: 0 10px;
+    }
+
+    .hero-status {
+        font-size: 7px;
+        padding: 5px 9px;
+        margin-bottom: 7px;
+    }
+
+    .hero-content h1 {
+        font-size: 32px;
+        margin-bottom: 6px;
+    }
+
+    .hero-content h3 {
+        font-size: 15px;
+        margin-bottom: 4px;
+    }
+
+    .hero-content p {
+        font-size: 10px;
+        margin-bottom: 10px;
+    }
+
+    .quick-actions {
+        width: 100%;
+        max-width: 100%;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding: 0 2px 3px;
+        gap: 6px;
+        scrollbar-width: none;
+    }
+
+    .quick-actions::-webkit-scrollbar {
+        display: none;
+    }
+
+    .quick-actions button {
+        flex: 0 0 auto;
+        padding: 7px 12px;
+        font-size: 9px;
+    }
+
+    /* -------------------------
+       CHAT
+    ------------------------- */
+
+    .chat-card {
+        width: 100%;
+        height: calc(100vh - 360px);
+        min-height: 420px;
+        max-height: 650px;
+        border-radius: 14px;
+    }
+
+    .messages {
+        padding: 14px 10px;
+    }
+
+    .chat-row {
+        width: 100%;
+        max-width: 100%;
+        gap: 7px;
+        margin-bottom: 14px;
+    }
+
+    .small-avatar,
+    .prasanna-avatar {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+
+    .bubble {
+        max-width: calc(100vw - 90px);
+        padding: 10px 12px;
+        font-size: 12px;
+        line-height: 1.5;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .time {
+        font-size: 8px;
+    }
+
+    /* -------------------------
+       CHAT INPUT
+    ------------------------- */
+
+    .input-area {
+        width: 100%;
+        gap: 6px;
+        padding: 7px 8px 6px;
+    }
+
+    .input-box {
+        min-width: 0;
+        height: 48px;
+        gap: 7px;
+        padding: 0 10px;
+        border-radius: 11px;
+    }
+
+    .input-box input {
+        min-width: 0;
+        width: 100%;
+        font-size: 13px;
+    }
+
+    .attach,
+    .mic {
+        flex-shrink: 0;
+        font-size: 17px;
+    }
+
+    .send-button-group {
+        gap: 6px;
+    }
+
+    .send-button {
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
+        border-radius: 10px;
+        font-size: 19px;
+    }
+
+    .clear-chat-btn {
+        top: -30px;
+        left: auto;
+        right: 0;
+        width: 27px;
+        height: 23px;
+    }
+
+    /* -------------------------
+       SUGGESTIONS
+    ------------------------- */
+
+    .suggestions {
+        gap: 6px;
+        padding: 0 8px 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .suggestions::-webkit-scrollbar {
+        display: none;
+    }
+
+    .suggestions button {
+        flex: 0 0 auto;
+        padding: 7px 11px;
+        font-size: 9px;
+    }
+
+    /* -------------------------
+       RIGHT PANEL
+    ------------------------- */
+
+    .right-panel {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+        overflow: visible;
+    }
+
+    .right-card {
+        width: 100%;
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .right-quote {
+        width: 100%;
+        min-height: 100px;
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .right-quote p {
+        font-size: 11px;
+    }
+
+    .right-quote span {
+        font-size: 30px;
+    }
+
+    /* -------------------------
+       TOOLS
+    ------------------------- */
+
+    .tools-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+    }
+
+    .tools-grid button {
+        height: 62px;
+        font-size: 9px;
+    }
+
+    .tools-grid button span {
+        font-size: 17px;
+    }
+
+    /* -------------------------
+       MODALS
+    ------------------------- */
+
+    .avani-panel,
+    .prasanna-info-card,
+    .prasanna-image-card {
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
+    }
+
+    .avani-panel {
+        max-height: 85vh;
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .prasanna-info-card {
+        padding: 22px;
+        border-radius: 18px;
+    }
+
+    .prasanna-image-card {
+        padding: 14px;
+        border-radius: 18px;
+    }
+
+    .prasanna-image-frame {
+        height: min(420px, 65vh);
+    }
+
+    /* -------------------------
+       TOUCH FRIENDLY
+    ------------------------- */
+
+    button,
+    .nav-item,
+    .brand,
+    .prasanna-profile {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+        touch-action: manipulation;
+    }
+}
+
+
+/* =========================================================
+   EXTRA SMALL PHONES
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .main {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
+    .sidebar {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+
+    .nav-item {
+        min-width: 82px;
+        padding: 0 8px;
+        font-size: 10px;
+    }
+
+    .hero-card {
+        height: 230px;
+    }
+
+    .hero-content h1 {
+        font-size: 28px;
+    }
+
+    .hero-content h3 {
+        font-size: 14px;
+    }
+
+    .hero-content p {
+        font-size: 9px;
+    }
+
+    .chat-card {
+        min-height: 390px;
+    }
+
+    .bubble {
+        max-width: calc(100vw - 75px);
+        font-size: 11px;
+    }
+
+    .input-box {
+        height: 46px;
+    }
+
+    .send-button {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+    }
+}

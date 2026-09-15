@@ -1458,22 +1458,148 @@ async def agent_action(request: AgentRequest):
             "success": False,
             "response": "Please tell me what you want me to do."
         }
-    # --------------------------------------------------------
-    # NATURAL LANGUAGE AGENT UNDERSTANDING
-    # --------------------------------------------------------
 
     import json
     import re
-        # --------------------------------------------------------
-    # AVANI SHORT-TERM AGENT CONTEXT
-    # --------------------------------------------------------
+    import subprocess
+    import os
 
     global last_agent_command
 
     if "last_agent_command" not in globals():
         last_agent_command = ""
 
-    natural_command_prompt = f"""
+    # ========================================================
+    # DIRECT WINDOWS COMMAND DETECTION
+    # ========================================================
+    # Exact computer commands are handled BEFORE Ollama.
+    # This is important for the Windows desktop application.
+    # ========================================================
+
+    direct_commands = {
+        # Volume
+        "increase volume",
+        "turn up volume",
+        "volume up",
+        "make volume louder",
+        "make it louder",
+        "louder",
+        "decrease volume",
+        "turn down volume",
+        "volume down",
+        "lower the volume",
+        "make volume quieter",
+        "make it quieter",
+        "quieter",
+        "mute volume",
+        "mute",
+        "mute my laptop",
+        "unmute volume",
+        "unmute",
+        "unmute my laptop",
+
+        # Brightness
+        "increase brightness",
+        "brightness up",
+        "make screen brighter",
+        "decrease brightness",
+        "brightness down",
+        "make screen darker",
+
+        # Wi-Fi
+        "turn wifi on",
+        "turn wi-fi on",
+        "wifi on",
+        "wi-fi on",
+        "enable wifi",
+        "enable wi-fi",
+        "turn wifi off",
+        "turn wi-fi off",
+        "wifi off",
+        "wi-fi off",
+        "disable wifi",
+        "disable wi-fi",
+
+        # Media
+        "play",
+        "play music",
+        "resume",
+        "resume music",
+        "pause",
+        "pause music",
+        "next",
+        "next song",
+        "next track",
+        "previous",
+        "previous song",
+        "previous track",
+        "back",
+
+        # Screenshot
+        "screenshot",
+        "take screenshot",
+        "capture screen",
+        "take a screenshot",
+        "capture my screen",
+
+        # Lock
+        "lock",
+        "lock my laptop",
+        "lock my computer",
+        "lock computer",
+        "lock screen",
+        "lock the screen",
+
+        # Power
+        "restart",
+        "restart computer",
+        "restart laptop",
+        "restart my computer",
+        "restart my laptop",
+        "shutdown",
+        "shutdown computer",
+        "shutdown laptop",
+        "shutdown my computer",
+        "shutdown my laptop",
+        "confirm restart",
+        "confirm shutdown",
+
+        # Camera
+        "open camera",
+        "open the camera",
+        "launch camera",
+        "start camera"
+    }
+
+    exact_volume_match = re.match(
+        r"^(?:set |make )?volume(?: to)?\s+(\d{1,3})%?$",
+        command
+    )
+
+    exact_brightness_match = re.match(
+        r"^(?:set |make )?brightness(?: to)?\s+(\d{1,3})%?$",
+        command
+    )
+
+    is_direct_command = (
+        command in direct_commands
+        or exact_volume_match is not None
+        or exact_brightness_match is not None
+        or command.startswith("open ")
+        or command.startswith("go to ")
+        or command.startswith("calculate ")
+    )
+
+    # ========================================================
+    # NATURAL LANGUAGE AGENT UNDERSTANDING
+    # ========================================================
+    # Only use Ollama when the command is NOT already a
+    # directly recognizable computer action.
+    # ========================================================
+
+    if not is_direct_command:
+
+        natural_command_prompt = f"""
 You are Avani's action understanding system.
 
 Convert the user's natural-language request into ONE
@@ -1630,60 +1756,71 @@ Return:
 Only return JSON.
 """
 
-    try:
+        try:
 
-        natural_result = generate_ai_response(
-            prompt=natural_command_prompt,
-            model=OLLAMA_MODEL,
-            timeout=60
-        )
+            natural_result = generate_ai_response(
+                prompt=natural_command_prompt,
+                model=OLLAMA_MODEL,
+                timeout=60
+            )
 
-        natural_result = (
-            natural_result
-            .replace("```json", "")
-            .replace("```", "")
-            .strip()
-        )
+            natural_result = (
+                natural_result
+                .replace("```json", "")
+                .replace("```", "")
+                .strip()
+            )
 
-        parsed_command = json.loads(
-            natural_result
-        )
-        if not parsed_command.get("is_action"):
+            parsed_command = json.loads(
+                natural_result
+            )
+
+            if not parsed_command.get("is_action"):
+
+                return {
+                    "success": True,
+                    "is_action": False,
+                    "action": "not_an_action",
+                    "response": ""
+                }
+
+            detected_command = (
+                parsed_command.get(
+                    "command",
+                    ""
+                )
+                .strip()
+                .lower()
+            )
+
+            if detected_command:
+                command = detected_command
+                last_agent_command = detected_command
+
+        except Exception as error:
+
+            print(
+                "NATURAL AGENT UNDERSTANDING ERROR:",
+                error
+            )
 
             return {
-                "success": True,
-                "is_action": False,
-                "action": "not_an_action",
-                "response": ""
+                "success": False,
+                "action": "agent_error",
+                "response":
+                    "I couldn't understand that computer command right now.",
+                "error": str(error)
             }
 
+    else:
 
-        detected_command = (
-            parsed_command.get(
-                "command",
-                ""
-            )
-            .strip()
-            .lower()
-        )
+        # Direct command was already understood.
+        # Save it for short-term follow-up commands.
+        last_agent_command = command
 
-
-        if detected_command:
-
-            command = detected_command
-
-            last_agent_command = detected_command
-
-    except Exception as error:
-
-        print(
-            "NATURAL AGENT UNDERSTANDING ERROR:",
-            error
-        )
-
-        # --------------------------------------------------------
+    # ========================================================
     # OPEN WEBSITE
-    # --------------------------------------------------------
+    # ========================================================
 
     website_map = {
         "google": "https://www.google.com",
@@ -1700,7 +1837,6 @@ Only return JSON.
         "x": "https://x.com"
     }
 
-
     for name, url in website_map.items():
 
         if (
@@ -1710,26 +1846,41 @@ Only return JSON.
             or command == f"open {name} website"
         ):
 
-            return {
-                "success": True,
-                "action": "open_website",
-                "url": url,
-                "response": f"Opening {name}."
-            }
+            try:
 
+                import webbrowser
 
-    # --------------------------------------------------------
+                webbrowser.open(url)
+
+                return {
+                    "success": True,
+                    "action": "open_website",
+                    "url": url,
+                    "response": f"Opening {name}."
+                }
+
+            except Exception as error:
+
+                return {
+                    "success": False,
+                    "response":
+                        f"I couldn't open {name}.",
+                    "error": str(error)
+                }
+
+    # ========================================================
     # OPEN ANY WEBSITE
-    # --------------------------------------------------------
+    # ========================================================
 
     website_command = None
 
     if command.startswith("open "):
+
         website_command = command[5:].strip()
 
     elif command.startswith("go to "):
-        website_command = command[6:].strip()
 
+        website_command = command[6:].strip()
 
     if website_command:
 
@@ -1738,29 +1889,45 @@ Only return JSON.
             ""
         ).strip()
 
-
         if (
             "." in website_command
             and " " not in website_command
         ):
 
-            url = website_command
+            try:
 
-            if not url.startswith("http://") and not url.startswith("https://"):
-                url = "https://" + url
+                import webbrowser
 
-            return {
-                "success": True,
-                "action": "open_website",
-                "url": url,
-                "response": f"Opening {website_command}."
-            }
-        # --------------------------------------------------------
-    # OPEN WINDOWS APPLICATIONS
-    # --------------------------------------------------------
+                url = website_command
 
-    import subprocess
+                if (
+                    not url.startswith("http://")
+                    and not url.startswith("https://")
+                ):
+                    url = "https://" + url
 
+                webbrowser.open(url)
+
+                return {
+                    "success": True,
+                    "action": "open_website",
+                    "url": url,
+                    "response":
+                        f"Opening {website_command}."
+                }
+
+            except Exception as error:
+
+                return {
+                    "success": False,
+                    "response":
+                        f"I couldn't open {website_command}.",
+                    "error": str(error)
+                }
+
+    # ========================================================
+    # WINDOWS APPLICATIONS
+    # ========================================================
 
     app_map = {
         "calculator": "calc.exe",
@@ -1774,11 +1941,9 @@ Only return JSON.
         "powershell": "powershell.exe"
     }
 
-
     if command.startswith("open "):
 
         app_name = command[5:].strip()
-
 
         if app_name in app_map:
 
@@ -1805,14 +1970,13 @@ Only return JSON.
                         f"I couldn't open {app_name}.",
                     "error": str(error)
                 }
-        # --------------------------------------------------------
-    # OPEN WINDOWS FOLDERS
-    # --------------------------------------------------------
 
-    import os
-
+    # ========================================================
+    # WINDOWS FOLDERS
+    # ========================================================
 
     folder_map = {
+
         "desktop": os.path.join(
             os.path.expanduser("~"),
             "Desktop"
@@ -1844,20 +2008,17 @@ Only return JSON.
         )
     }
 
-
     if command.startswith("open "):
 
         folder_name = command[5:].strip()
 
-
         if folder_name.startswith("my "):
-            folder_name = folder_name[3:].strip()
 
+            folder_name = folder_name[3:].strip()
 
         if folder_name in folder_map:
 
             folder_path = folder_map[folder_name]
-
 
             if os.path.exists(folder_path):
 
@@ -1885,10 +2046,11 @@ Only return JSON.
                         "response":
                             f"I couldn't open your {folder_name}.",
                         "error": str(error)
-                    }         
-        # --------------------------------------------------------
+                    }
+
+    # ========================================================
     # WINDOWS SYSTEM ACTIONS
-    # --------------------------------------------------------
+    # ========================================================
 
     system_action_map = {
 
@@ -1921,11 +2083,9 @@ Only return JSON.
         ]
     }
 
-
     if command.startswith("open "):
 
         system_name = command[5:].strip()
-
 
         if system_name in system_action_map:
 
@@ -1952,11 +2112,13 @@ Only return JSON.
                         f"I couldn't open {system_name}.",
                     "error": str(error)
                 }
-         # --------------------------------------------------------
+
+    # ========================================================
     # WINDOWS VOLUME CONTROL
-    # --------------------------------------------------------
+    # ========================================================
 
     volume_actions = {
+
         "increase volume": "up",
         "turn up volume": "up",
         "volume up": "up",
@@ -1981,18 +2143,14 @@ Only return JSON.
         "unmute my laptop": "unmute"
     }
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # SET EXACT VOLUME
-    # --------------------------------------------------------
-
-    import re
+    # ========================================================
 
     volume_match = re.match(
         r"^(?:set |make )?volume(?: to)?\s+(\d{1,3})%?$",
         command
     )
-
 
     if volume_match:
 
@@ -2002,9 +2160,10 @@ Only return JSON.
                 volume_match.group(1)
             )
 
-            if volume_percent > 100:
-                volume_percent = 100
-
+            volume_percent = max(
+                0,
+                min(100, volume_percent)
+            )
 
             from pycaw.pycaw import AudioUtilities
 
@@ -2017,7 +2176,6 @@ Only return JSON.
                 None
             )
 
-
             return {
                 "success": True,
                 "action": "set_volume",
@@ -2025,7 +2183,6 @@ Only return JSON.
                 "response":
                     f"Volume set to {volume_percent}%."
             }
-
 
         except Exception as error:
 
@@ -2036,10 +2193,9 @@ Only return JSON.
                 "error": str(error)
             }
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # VOLUME UP / DOWN / MUTE
-    # --------------------------------------------------------
+    # ========================================================
 
     if command in volume_actions:
 
@@ -2053,7 +2209,6 @@ Only return JSON.
             VK_VOLUME_DOWN = 0xAE
             VK_VOLUME_UP = 0xAF
 
-
             if action == "up":
 
                 key = VK_VOLUME_UP
@@ -2065,7 +2220,6 @@ Only return JSON.
             else:
 
                 key = VK_VOLUME_MUTE
-
 
             ctypes.windll.user32.keybd_event(
                 key,
@@ -2081,7 +2235,6 @@ Only return JSON.
                 0
             )
 
-
             return {
                 "success": True,
                 "action": "volume_control",
@@ -2096,7 +2249,6 @@ Only return JSON.
                 )
             }
 
-
         except Exception as error:
 
             return {
@@ -2105,11 +2257,13 @@ Only return JSON.
                     "I couldn't control the volume.",
                 "error": str(error)
             }
-        # --------------------------------------------------------
+
+    # ========================================================
     # WINDOWS BRIGHTNESS CONTROL
-    # --------------------------------------------------------
+    # ========================================================
 
     brightness_actions = {
+
         "increase brightness": 1,
         "brightness up": 1,
         "make screen brighter": 1,
@@ -2119,16 +2273,14 @@ Only return JSON.
         "make screen darker": -1
     }
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # SET EXACT BRIGHTNESS
-    # --------------------------------------------------------
+    # ========================================================
 
     brightness_match = re.match(
         r"^(?:set |make )?brightness(?: to)?\s+(\d{1,3})%?$",
         command
     )
-
 
     if brightness_match:
 
@@ -2143,13 +2295,11 @@ Only return JSON.
                 min(100, brightness_percent)
             )
 
-
             import screen_brightness_control as sbc
 
             sbc.set_brightness(
                 brightness_percent
             )
-
 
             return {
                 "success": True,
@@ -2158,7 +2308,6 @@ Only return JSON.
                 "response":
                     f"Brightness set to {brightness_percent}%."
             }
-
 
         except Exception as error:
 
@@ -2169,10 +2318,9 @@ Only return JSON.
                 "error": str(error)
             }
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # BRIGHTNESS UP / DOWN
-    # --------------------------------------------------------
+    # ========================================================
 
     if command in brightness_actions:
 
@@ -2185,19 +2333,22 @@ Only return JSON.
             )
 
             if isinstance(current, list):
+
                 current = current[0]
 
             change = brightness_actions[command]
 
             new_brightness = max(
                 0,
-                min(100, current + (10 * change))
+                min(
+                    100,
+                    current + (10 * change)
+                )
             )
 
             sbc.set_brightness(
                 new_brightness
             )
-
 
             return {
                 "success": True,
@@ -2211,7 +2362,6 @@ Only return JSON.
                 )
             }
 
-
         except Exception as error:
 
             return {
@@ -2220,10 +2370,10 @@ Only return JSON.
                     "I couldn't control the screen brightness.",
                 "error": str(error)
             }
-                       
-    # --------------------------------------------------------
+
+    # ========================================================
     # CALCULATOR
-    # --------------------------------------------------------
+    # ========================================================
 
     if (
         command.startswith("calculate ")
@@ -2284,59 +2434,59 @@ Only return JSON.
             except Exception:
                 pass
 
-    # --------------------------------------------------------
-    # SCREEN BRIGHTNESS
-    # --------------------------------------------------------
+    # ========================================================
+    # SCREEN BRIGHTNESS FALLBACK
+    # ========================================================
 
     if "brightness" in command:
 
-     import re
-     import screen_brightness_control as sbc
+        import screen_brightness_control as sbc
 
-    brightness_match = re.search(
-        r"brightness.*?([0-9]{1,3})\s*%?",
-        command
-    )
-
-    if brightness_match:
-
-        brightness_value = int(
-            brightness_match.group(1)
+        brightness_match = re.search(
+            r"brightness.*?([0-9]{1,3})\s*%?",
+            command
         )
 
-        if 0 <= brightness_value <= 100:
+        if brightness_match:
 
-            try:
+            brightness_value = int(
+                brightness_match.group(1)
+            )
 
-                sbc.set_brightness(
-                    brightness_value
-                )
+            if 0 <= brightness_value <= 100:
 
-                return {
-                    "success": True,
-                    "action": "set_brightness",
-                    "brightness": brightness_value,
-                    "response":
-                        f"Brightness set to {brightness_value}%."
-                }
+                try:
 
-            except Exception as error:
+                    sbc.set_brightness(
+                        brightness_value
+                    )
 
-                return {
-                    "success": False,
-                    "response":
-                        "I couldn't set the screen brightness.",
-                    "error": str(error)
-                }
+                    return {
+                        "success": True,
+                        "action": "set_brightness",
+                        "brightness": brightness_value,
+                        "response":
+                            f"Brightness set to {brightness_value}%."
+                    }
 
-        return {
-            "success": False,
-            "response":
-                "Brightness must be between 0% and 100%."
-        }
-        # --------------------------------------------------------
+                except Exception as error:
+
+                    return {
+                        "success": False,
+                        "response":
+                            "I couldn't set the screen brightness.",
+                        "error": str(error)
+                    }
+
+            return {
+                "success": False,
+                "response":
+                    "Brightness must be between 0% and 100%."
+            }
+
+    # ========================================================
     # WINDOWS WI-FI CONTROL
-    # --------------------------------------------------------
+    # ========================================================
 
     if command in [
         "turn wifi on",
@@ -2348,8 +2498,6 @@ Only return JSON.
     ]:
 
         try:
-
-            import subprocess
 
             subprocess.run(
                 [
@@ -2367,17 +2515,18 @@ Only return JSON.
             return {
                 "success": True,
                 "action": "wifi_on",
-                "response": "Wi-Fi turned on."
+                "response":
+                    "Wi-Fi turned on."
             }
 
         except Exception as error:
 
             return {
                 "success": False,
-                "response": "I couldn't turn Wi-Fi on.",
+                "response":
+                    "I couldn't turn Wi-Fi on.",
                 "error": str(error)
             }
-
 
     if command in [
         "turn wifi off",
@@ -2389,8 +2538,6 @@ Only return JSON.
     ]:
 
         try:
-
-            import subprocess
 
             subprocess.run(
                 [
@@ -2408,21 +2555,25 @@ Only return JSON.
             return {
                 "success": True,
                 "action": "wifi_off",
-                "response": "Wi-Fi turned off."
+                "response":
+                    "Wi-Fi turned off."
             }
 
         except Exception as error:
 
             return {
                 "success": False,
-                "response": "I couldn't turn Wi-Fi off.",
+                "response":
+                    "I couldn't turn Wi-Fi off.",
                 "error": str(error)
             }
-        # --------------------------------------------------------
+
+    # ========================================================
     # WINDOWS MEDIA CONTROL
-    # --------------------------------------------------------
+    # ========================================================
 
     media_commands = {
+
         "play": "play",
         "play music": "play",
         "resume": "play",
@@ -2450,18 +2601,22 @@ Only return JSON.
             action = media_commands[command]
 
             if action == "play":
+
                 pyautogui.press("playpause")
                 response_text = "Playing media."
 
             elif action == "pause":
+
                 pyautogui.press("playpause")
                 response_text = "Media paused."
 
             elif action == "next":
+
                 pyautogui.press("nexttrack")
                 response_text = "Playing next track."
 
             elif action == "previous":
+
                 pyautogui.press("prevtrack")
                 response_text = "Playing previous track."
 
@@ -2478,10 +2633,11 @@ Only return JSON.
                 "response":
                     "I couldn't control media right now.",
                 "error": str(error)
-            }   
-        # --------------------------------------------------------
+            }
+
+    # ========================================================
     # WINDOWS SCREENSHOT CONTROL
-    # --------------------------------------------------------
+    # ========================================================
 
     screenshot_commands = [
         "screenshot",
@@ -2497,9 +2653,11 @@ Only return JSON.
 
             import pyautogui
             from datetime import datetime
-            import os
 
-            os.makedirs("screenshots", exist_ok=True)
+            os.makedirs(
+                "screenshots",
+                exist_ok=True
+            )
 
             timestamp = datetime.now().strftime(
                 "%Y%m%d_%H%M%S"
@@ -2529,10 +2687,11 @@ Only return JSON.
                 "response":
                     "I couldn't capture the screen.",
                 "error": str(error)
-            }     
-        # --------------------------------------------------------
+            }
+
+    # ========================================================
     # WINDOWS LOCK CONTROL
-    # --------------------------------------------------------
+    # ========================================================
 
     lock_commands = [
         "lock",
@@ -2554,7 +2713,8 @@ Only return JSON.
             return {
                 "success": True,
                 "action": "lock_windows",
-                "response": "Locking your computer."
+                "response":
+                    "Locking your computer."
             }
 
         except Exception as error:
@@ -2564,10 +2724,11 @@ Only return JSON.
                 "response":
                     "I couldn't lock the computer.",
                 "error": str(error)
-            } 
-        # --------------------------------------------------------
-        # WINDOWS SHUTDOWN / RESTART
-        # --------------------------------------------------------
+            }
+
+    # ========================================================
+    # WINDOWS SHUTDOWN / RESTART
+    # ========================================================
 
     restart_commands = [
         "restart",
@@ -2594,7 +2755,6 @@ Only return JSON.
                 "Restart requested. Please confirm by saying: confirm restart."
         }
 
-
     if command in shutdown_commands:
 
         return {
@@ -2604,21 +2764,24 @@ Only return JSON.
                 "Shutdown requested. Please confirm by saying: confirm shutdown."
         }
 
-
     if command == "confirm restart":
 
         try:
 
-            import subprocess
-
             subprocess.Popen(
-                ["shutdown", "/r", "/t", "5"]
+                [
+                    "shutdown",
+                    "/r",
+                    "/t",
+                    "5"
+                ]
             )
 
             return {
                 "success": True,
                 "action": "restart",
-                "response": "Restarting your computer."
+                "response":
+                    "Restarting your computer."
             }
 
         except Exception as error:
@@ -2634,16 +2797,20 @@ Only return JSON.
 
         try:
 
-            import subprocess
-
             subprocess.Popen(
-                ["shutdown", "/s", "/t", "5"]
+                [
+                    "shutdown",
+                    "/s",
+                    "/t",
+                    "5"
+                ]
             )
 
             return {
                 "success": True,
                 "action": "shutdown",
-                "response": "Shutting down your computer."
+                "response":
+                    "Shutting down your computer."
             }
 
         except Exception as error:
@@ -2655,9 +2822,9 @@ Only return JSON.
                 "error": str(error)
             }
 
-        # --------------------------------------------------------
+    # ========================================================
     # WINDOWS CAMERA CONTROL
-    # --------------------------------------------------------
+    # ========================================================
 
     camera_commands = [
         "open camera",
@@ -2670,8 +2837,6 @@ Only return JSON.
 
         try:
 
-            import subprocess
-
             subprocess.Popen(
                 [
                     "explorer.exe",
@@ -2682,7 +2847,8 @@ Only return JSON.
             return {
                 "success": True,
                 "action": "open_camera",
-                "response": "Opening the camera."
+                "response":
+                    "Opening the camera."
             }
 
         except Exception as error:
@@ -2692,11 +2858,11 @@ Only return JSON.
                 "response":
                     "I couldn't open the camera.",
                 "error": str(error)
-            }    
+            }
 
-    # --------------------------------------------------------
+    # ========================================================
     # AI FALLBACK
-    # --------------------------------------------------------
+    # ========================================================
 
     try:
 
@@ -2729,7 +2895,6 @@ unless the backend actually completed it.
             "response": response_text
         }
 
-
     except Exception as error:
 
         return {
@@ -2737,4 +2902,4 @@ unless the backend actually completed it.
             "response":
                 "I couldn't process that command right now.",
             "error": str(error)
-        }    
+        }

@@ -1040,7 +1040,7 @@ async function sendMessage() {
 
             const response =
                 await fetch(
-                    "/web-search",
+                    `${API_BASE}/web-search`,
                     {
                         method: "POST",
 
@@ -1361,7 +1361,7 @@ if (shouldTryAgent) {
 
         const response =
             await fetch(
-                "/agent",
+                `${API_BASE}/agent`,
                 {
                     method: "POST",
 
@@ -1636,7 +1636,7 @@ if (!agentMessageAlreadyAdded) {
 
             response =
                 await fetch(
-                    "/chat-with-file",
+                    `${API_BASE}/chat-with-file`,
                     {
                         method: "POST",
 
@@ -1669,8 +1669,8 @@ if (!agentMessageAlreadyAdded) {
 
             response =
                 await fetch(
-                    `/chat?message=${encodeURIComponent(messageForAvani)}`
-                );
+    `${API_BASE}/chat?message=${encodeURIComponent(messageForAvani)}`
+);
         }
 
 
@@ -2473,14 +2473,14 @@ function openPrasannaBrandProfile() {
 
 
                     <a
-                        href="mailto:adhavprasanna@gmail.com"
+                        href="mailto:adhavprasamna@gmail.com"
                     >
 
                         <span>✉</span>
 
                         <div>
                             <small>Email</small>
-                            adhavprasanna@gmail.com
+                            adhavprasamna@gmail.com
                         </div>
 
                     </a>
@@ -2622,7 +2622,7 @@ function openPrasannaInfo() {
             <div class="prasanna-contact">
 
                 <a
-                    href="mailto:adhavprasanna@gmail.com"
+                    href="mailto:adhavprasamna@gmail.com"
                     class="prasanna-contact-item"
                 >
 
@@ -2636,7 +2636,7 @@ function openPrasannaInfo() {
                             Email
                         </small>
 
-                        adhavprasanna@gmail.com
+                        adhavprasamna@gmail.com
 
                     </span>
 

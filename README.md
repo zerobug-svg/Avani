@@ -18,10 +18,11 @@ https://avani-eoxi.onrender.com
 
 Download and install Avani directly on your Windows device:
 
-**Download Avani Setup**
-
-https://github.com/zerobug-svg/Avani/raw/refs/heads/main/installer/Avani-Setup.exe
-
+<p align="center">
+  <a href="https://github.com/zerobug-svg/Avani/raw/refs/heads/main/installer/Avani-Setup.exe">
+    <img src="https://img.shields.io/badge/⬇%20Download%20Avani%20for%20Windows-2563EB?style=for-the-badge&logo=windows&logoColor=white" alt="Download Avani for Windows">
+  </a>
+</p>
 After downloading:
 
 1. Run `Avani-Setup.exe`

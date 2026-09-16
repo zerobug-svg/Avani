@@ -2332,62 +2332,61 @@ function openPrasannaBrandProfile() {
 
             <!-- PROJECTS -->
 
-            <section class="prasanna-brand-section">
+<section class="prasanna-brand-section">
 
-                <h2>
-                    Projects
-                </h2>
+    <h2>
+        Projects
+    </h2>
 
+    <div class="prasanna-brand-project">
 
-                <div class="prasanna-brand-project">
+        <h3>
+            Autonomous Multi-Agent Software Development & Debugging Workflow
+        </h3>
 
-                    <h3>
-                        Avani — Personal AI Assistant
-                    </h3>
+        <p>
+            An AI-driven multi-agent workflow that coordinates
+            specialized agents for software development,
+            code analysis, debugging, testing, and problem
+            resolution. Designed to automate development tasks
+            and improve software engineering productivity.
+        </p>
 
-                    <p>
-                        A personal AI assistant built using
-                        Python, FastAPI and Ollama with
-                        memory, tasks, notes, voice assistance,
-                        file intelligence, image intelligence
-                        and web search.
-                    </p>
+    </div>
 
-                </div>
+    <div class="prasanna-brand-project">
 
+        <h3>
+            E-Commerce Hybrid Recommendation System
+        </h3>
 
-                <div class="prasanna-brand-project">
+        <p>
+            A hybrid recommendation engine combining
+            collaborative filtering, content-based techniques,
+            and user and product behavior to generate
+            personalized product recommendations and improve
+            e-commerce discovery and engagement.
+        </p>
 
-                    <h3>
-                        Spam Classification System
-                    </h3>
+    </div>
 
-                    <p>
-                        A Machine Learning application designed
-                        to identify spam messages using
-                        text processing and classification
-                        techniques.
-                    </p>
+    <div class="prasanna-brand-project">
 
-                </div>
+        <h3>
+            Real-Time Financial Anomaly & AML Detection
+        </h3>
 
+        <p>
+            A real-time machine learning system designed to
+            detect suspicious financial transactions,
+            behavioral anomalies, and potential money-laundering
+            patterns using transaction analytics, anomaly
+            detection, and risk scoring.
+        </p>
 
-                <div class="prasanna-brand-project">
+    </div>
 
-                    <h3>
-                        AI/ML Projects & Experiments
-                    </h3>
-
-                    <p>
-                        Exploring Artificial Intelligence,
-                        Machine Learning, Generative AI,
-                        automation and practical intelligent
-                        applications.
-                    </p>
-
-                </div>
-
-            </section>
+</section>
 
 
             <!-- EDUCATION -->
@@ -2473,14 +2472,14 @@ function openPrasannaBrandProfile() {
 
 
                     <a
-                        href="mailto:adhavprasanna@gmail.com"
+                        href="mailto:adhavprasamna@gmail.com"
                     >
 
                         <span>✉</span>
 
                         <div>
                             <small>Email</small>
-                            adhavprasanna@gmail.com
+                            adhavprasamna@gmail.com
                         </div>
 
                     </a>
@@ -2622,7 +2621,7 @@ function openPrasannaInfo() {
             <div class="prasanna-contact">
 
                 <a
-                    href="mailto:adhavprasanna@gmail.com"
+                    href="mailto:adhavprasamna@gmail.com"
                     class="prasanna-contact-item"
                 >
 
@@ -2636,7 +2635,7 @@ function openPrasannaInfo() {
                             Email
                         </small>
 
-                        adhavprasanna@gmail.com
+                        adhavprasamna@gmail.com
 
                     </span>
 
